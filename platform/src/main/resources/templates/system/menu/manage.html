@@ -1,0 +1,271 @@
+<div class="layui-fluid layui-anim aloha-anim" id="aloha-menu" lay-title="菜单管理">
+    <div class="layui-row layui-col-space8 aloha-container">
+        <div class="layui-col-md3 layui-col-sm3 layui-col-xs12">
+            <div class="layui-card">
+                <div class="layui-card-body aloha-table-full">
+                    <div class="eleTree menu-tree" lay-filter="menu-tree" style="margin-left: 1rem"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md9 layui-col-sm9 layui-col-xs12">
+            <div class="layui-card">
+                <div class="layui-card-body aloha-table-full">
+                    <form class="layui-form layui-table-form" lay-filter="menu-table-form" id="menu-table-form">
+                        <div class="layui-row">
+                            <div class="layui-col-md8">
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label layui-form-label-sm">名称</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="name" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4 layui-col-sm12 layui-col-xs12 table-action-area">
+                                <div class="layui-btn layui-btn-sm layui-btn-primary aloha-button-blue-plain table-action" id="query"><i class="layui-icon">&#xe848;</i></div>
+                                <div class="layui-btn layui-btn-sm layui-btn-primary aloha-button-green-plain table-action" id="reset"><i class="layui-icon">&#xe79b;</i></div>
+                                <div class="layui-btn layui-btn-sm layui-btn-primary aloha-button-green-plain table-action aloha-hide" id="reloadTree"><i class="layui-icon">&#xe79b;</i></div>
+                                <div sec:authorize="hasAnyAuthority('menu:add,menu:delete')" class="layui-btn layui-btn-sm layui-btn-primary table-action action-more"><i class="layui-icon">&#xe875;</i></div>
+                            </div>
+                        </div>
+                    </form>
+                    <table lay-filter="menu-table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="menu-option">
+    <span sec:authorize="!hasAnyAuthority('menu:update,menu:delete')">
+        <span class="layui-badge-dot aloha-bg-orange"></span>无权限
+    </span>
+    <a sec:authorize="hasAuthority('menu:update')" lay-event="edit"><i class="layui-icon aloha-edit-area aloha-blue">&#xe7a4;</i></a>
+    <a sec:authorize="hasAuthority('menu:delete')" lay-event="del"><i class="layui-icon aloha-edit-area aloha-red">&#xe7f9;</i></a>
+</script>
+<script data-th-inline="none" type="text/javascript">
+    layui.use(['dropdown', 'jquery', 'aloha', 'form', 'eleTree', 'table'], function () {
+        let $ = layui.jquery,
+            aloha = layui.aloha,
+            form = layui.form,
+            table = layui.table,
+            eleTree = layui.eleTree,
+            dropdown = layui.dropdown,
+            $view = $('#aloha-menu'),
+            $query = $view.find('#query'),
+            $reset = $view.find('#reset'),
+            $reloadTree = $view.find('#reloadTree'),
+            $searchForm = $view.find('form'),
+            sortObject,
+            menuTree,
+            tableIns,
+            parentId = 0;
+
+        form.render();
+
+        function reloadLayoutMenu() {
+            $('#aloha-layout').find('#reload-layout-menu').click();
+        }
+
+        function initSortObject() {
+            sortObject = {field: 'orderNumber', order: 'asc'};
+        }
+
+        initSortObject();
+
+        function deleteByIds(ids) {
+            aloha.modal.confirm('提示', '当您点击确定按钮后，这些记录将会被彻底删除，如果其包含子记录，也将一并删除！', function () {
+                // 进度条
+                let loadIndex = layer.load(2);
+                aloha.delete(ctx + 'menu/' + ids, null, function () {
+                    aloha.alert.success('删除成功！');
+                    reloadMenuTree();
+                    $reset.click();
+                    reloadLayoutMenu();
+                }, loadIndex);
+            });
+        }
+
+        dropdown.render({
+            elem: $view.find('.action-more'),
+            click: function (name, elem, event) {
+                if (name === 'add') {
+                    aloha.modal.open('新增目录', '/menu/add/' + parentId, {
+                        btn: ['提交', '重置'],
+                        area: [$(window).width() <= 750 ? '95%' : '50%', '50%'],
+                        yes: function (index, layero) {
+                            $('#menu-add').find('#submit').trigger('click');
+                        },
+                        btn2: function () {
+                            $('#menu-add').find('#reset').trigger('click');
+                            return false;
+                        }
+                    });
+                } else if (name === 'delete') {
+                    const checkStatus = table.checkStatus('menu-table');
+                    if (!checkStatus.data.length) {
+                        aloha.alert.warn('请勾选需要删除的目录、菜单或按钮');
+                    } else {
+                        const menuIds = [];
+                        layui.each(checkStatus.data, function (key, item) {
+                            menuIds.push(item.id);
+                        });
+                        deleteByIds(menuIds.join(','));
+                    }
+                }
+            },
+            options: [{
+                name: 'add',
+                title: '新增',
+                perms: 'menu:add'
+            }, {
+                name: 'delete',
+                title: '删除',
+                perms: 'menu:delete'
+            }]
+        });
+
+        menuTree = renderMenuTree();
+
+        eleTree.on("nodeClick(menu-tree)", function (d) {
+            parentId = d.data.currentData.id;
+            $reset.click();
+        });
+
+        function reloadTable() {
+            tableIns.reload({
+                initSort: {field: sortObject.field, type: sortObject.order},
+                where: getQueryParams(),
+                page: {curr: 1}
+            });
+        }
+
+        $reset.on('click', function () {
+            $searchForm[0].reset();
+            initSortObject();
+            reloadTable();
+        });
+
+        $query.on('click', function () {
+            reloadTable();
+        });
+
+        $reloadTree.on('click', function () {
+            reloadMenuTree();
+        });
+
+        function renderMenuTree() {
+            menuTree = eleTree.render({
+                elem: $view.find('.menu-tree'),
+                url: ctx + 'menu/tree',
+                accordion: true,
+                showCheckbox: false,
+                highlightCurrent: true,
+                renderAfterExpand: false,
+                expandOnClickNode: false,
+                defaultExpandedKeys: [0],
+                request: {
+                    name: "label",
+                    key: "id",
+                    children: "children",
+                    checked: "checked",
+                    disabled: "disabled",
+                    isLeaf: "isLeaf",
+                    data: "data"
+                },
+                response: {
+                    statusName: "code",
+                    statusCode: 200,
+                    dataName: "data"
+                }
+            });
+            return menuTree;
+        }
+
+        function reloadMenuTree() {
+            menuTree = renderMenuTree();
+        }
+
+        initTable();
+
+        function initTable() {
+            tableIns = aloha.table.init({
+                elem: $view.find('table'),
+                id: 'menu-table',
+                url: ctx + 'menu/list',
+                where: getQueryParams(),
+                autoSort: false,
+                initSort: {
+                    field: sortObject.field,
+                    type: sortObject.order
+                },
+                cols: [[
+                    {type: 'checkbox'},
+                    {type: 'numbers', title: '序号'},
+                    {field: 'name', title: '名称', align: 'center'},
+                    {field: 'type', title: '类型', align: 'center',
+                        templet: function (d) {
+                            if (d.type === 1) {
+                                return '目录';
+                            } else if (d.type === 2) {
+                                return '菜单';
+                            } else {
+                                return '按钮';
+                            }
+                        }
+                    },
+                    {field: 'icon', title: '图标', align: 'center',
+                        templet: function (d) {
+                            if (d.icon) {
+                                return '<i class="layui-icon ' + d.icon + '"></i>';
+                            }
+                            return '';
+                        }
+                    },
+                    {field: 'orderNumber', title: '排序', align: 'center', sort: true},
+                    {field: 'createTime', title: '创建时间', align: 'center', minWidth: 120, sort: true,
+                        templet: function (d) {
+                            if (d.createTime) {
+                                return layui.util.toDateString(d.createTime, 'yyyy-MM-dd');
+                            } else {
+                                return '';
+                            }
+                        }
+                    },
+                    {title: '操作', align: 'center', toolbar: '#menu-option'}
+                ]]
+            });
+        }
+
+        table.on('sort(menu-table)', function (obj) {
+            sortObject = {field: obj.field, order: obj.type};
+            tableIns.reload({initSort: obj, where: getQueryParams()});
+        });
+
+        table.on('tool(menu-table)', function (obj) {
+            const data = obj.data, layEvent = obj.event;
+            if (layEvent === 'edit') {
+                aloha.modal.open('修改目录', '/menu/update/' + data.id, {
+                    area: [$(window).width() <= 750 ? '95%' : '50%', '50%'],
+                    btn: ['提交', '取消'],
+                    yes: function (index, layero) {
+                        $('#menu-update').find('#submit').trigger('click');
+                    },
+                    btn2: function () {
+                        layer.closeAll();
+                    }
+                });
+            } else if (layEvent === 'del') {
+                deleteByIds(data.id);
+            }
+        });
+
+        function getQueryParams() {
+            return $.extend({
+                name: $searchForm.find('input[name="name"]').val().trim(),
+                parentId: parentId,
+                invalidate_ie_cache: new Date().getTime()
+            }, sortObject);
+        }
+    });
+</script>

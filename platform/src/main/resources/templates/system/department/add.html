@@ -1,0 +1,68 @@
+<style>
+    #department-add {
+        padding: 20px 25px 25px 0;
+    }
+</style>
+<div class="layui-fluid" id="department-add">
+    <form class="layui-form" action="" lay-filter="department-add-form">
+        <div class="layui-form-item aloha-hide">
+            <label class="layui-form-label aloha-form-item-require">parentId：</label>
+            <div class="layui-input-block">
+                <input type="text" name="parentId" class="layui-input" data-th-value="${parentId}">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label aloha-form-item-require">名称：</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" autocomplete="off" class="layui-input" maxlength="20" lay-verify="required|range">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">描述：</label>
+            <div class="layui-input-block">
+                <input type="text" name="description" autocomplete="off" class="layui-input" maxlength="50" lay-verify="range">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">排序：</label>
+            <div class="layui-input-block">
+                <input type="text" name="orderNumber" autocomplete="off" class="layui-input" lay-verify="number">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">状态：</label>
+            <div class="layui-input-block">
+                <input type="radio" name="status" value="1" title="启用" checked>
+                <input type="radio" name="status" value="0" title="停用">
+            </div>
+        </div>
+        <div class="layui-form-item aloha-hide">
+            <button class="layui-btn" lay-submit="" lay-filter="department-add-form-submit" id="submit"></button>
+            <button type="reset" class="layui-btn" id="reset"></button>
+        </div>
+    </form>
+</div>
+<script data-th-inline="none" type="text/javascript">
+    layui.use(['aloha', 'form', 'validate'], function () {
+        const $ = layui.$,
+            aloha = layui.aloha,
+            layer = layui.layer,
+            form = layui.form,
+            validate = layui.validate;
+
+        form.verify(validate);
+
+        form.render();
+
+        form.on('submit(department-add-form-submit)', function (data) {
+            aloha.post(ctx + 'department', data.field, function () {
+                layer.closeAll();
+                aloha.alert.success('新增成功');
+                let $aloha = $('#aloha-department');
+                $aloha.find('#query').click();
+                $aloha.find('#reloadTree').click();
+            });
+            return false;
+        });
+    });
+</script>

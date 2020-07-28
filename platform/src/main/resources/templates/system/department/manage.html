@@ -1,0 +1,279 @@
+<div class="layui-fluid layui-anim aloha-anim" id="aloha-department" lay-title="部门管理">
+    <div class="layui-row layui-col-space8 aloha-container">
+        <div class="layui-col-md3 layui-col-sm3 layui-col-xs12">
+            <div class="layui-card">
+                <div class="layui-card-body aloha-table-full">
+                    <div class="eleTree department-tree" lay-filter="department-tree" style="margin-left: 1rem"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md9 layui-col-sm9 layui-col-xs12">
+            <div class="layui-card">
+                <div class="layui-card-body aloha-table-full">
+                    <form class="layui-form layui-table-form" lay-filter="department-table-form" id="department-table-form">
+                        <div class="layui-row">
+                            <div class="layui-col-md8">
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label layui-form-label-sm">名称</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="name" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4 layui-col-sm12 layui-col-xs12 table-action-area">
+                                <div class="layui-btn layui-btn-sm layui-btn-primary aloha-button-blue-plain table-action" id="query"><i class="layui-icon">&#xe848;</i></div>
+                                <div class="layui-btn layui-btn-sm layui-btn-primary aloha-button-green-plain table-action" id="reset"><i class="layui-icon">&#xe79b;</i></div>
+                                <div class="layui-btn layui-btn-sm layui-btn-primary aloha-button-green-plain table-action aloha-hide" id="reloadTree"><i class="layui-icon">&#xe79b;</i></div>
+                                <div sec:authorize="hasAnyAuthority('department:add,department:delete')" class="layui-btn layui-btn-sm layui-btn-primary table-action action-more"><i class="layui-icon">&#xe875;</i></div>
+                            </div>
+                        </div>
+                    </form>
+                    <table lay-filter="department-table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="department-option">
+    <span sec:authorize="!hasAnyAuthority('department:update,department:delete')">
+        <span class="layui-badge-dot aloha-bg-orange"></span>无权限
+    </span>
+    <a sec:authorize="hasAuthority('department:update')" lay-event="edit"><i class="layui-icon aloha-edit-area aloha-blue">&#xe7a4;</i></a>
+    <a sec:authorize="hasAuthority('department:delete')" lay-event="del"><i class="layui-icon aloha-edit-area aloha-red">&#xe7f9;</i></a>
+</script>
+<script data-th-inline="none" type="text/javascript">
+    layui.use(['dropdown', 'jquery', 'aloha', 'form', 'eleTree', 'table'], function () {
+        let $ = layui.jquery,
+            aloha = layui.aloha,
+            form = layui.form,
+            table = layui.table,
+            eleTree = layui.eleTree,
+            dropdown = layui.dropdown,
+            $view = $('#aloha-department'),
+            $query = $view.find('#query'),
+            $reset = $view.find('#reset'),
+            $reloadTree = $view.find('#reloadTree'),
+            $searchForm = $view.find('form'),
+            departmentTree,
+            tableIns,
+            sortObject,
+            parentId = 0;
+
+        form.render();
+
+        function initSortObject() {
+            sortObject = {field: 'orderNumber', order: 'asc'};
+        }
+
+        initSortObject();
+
+        function deleteByIds(ids) {
+            aloha.modal.confirm('提示', '当您点击确定按钮后，这些记录将会被彻底删除，如果其包含子记录，也将一并删除！', function () {
+                // 进度条
+                let loadIndex = layer.load(2);
+                aloha.delete(ctx + 'department/' + ids, null, function () {
+                    aloha.alert.success('删除成功！');
+                    reloadDepartmentTree();
+                    $reset.click();
+                }, loadIndex);
+            });
+        }
+
+        dropdown.render({
+            elem: $view.find('.action-more'),
+            click: function (name, elem, event) {
+                if (name === 'add') {
+                    aloha.modal.open('新增部门', '/department/add/' + parentId, {
+                        btn: ['提交', '重置'],
+                        area: [$(window).width() <= 750 ? '95%' : '50%', '50%'],
+                        yes: function (index, layero) {
+                            $('#department-add').find('#submit').trigger('click');
+                        },
+                        btn2: function () {
+                            $('#department-add').find('#reset').trigger('click');
+                            return false;
+                        }
+                    });
+                } else if (name === 'delete') {
+                    const checkStatus = table.checkStatus('department-table');
+                    if (!checkStatus.data.length) {
+                        aloha.alert.warn('请勾选需要删除的部门');
+                    } else {
+                        const departmentIds = [];
+                        layui.each(checkStatus.data, function (key, item) {
+                            departmentIds.push(item.id);
+                        });
+                        deleteByIds(departmentIds.join(','));
+                    }
+                }
+            },
+            options: [{
+                name: 'add',
+                title: '新增',
+                perms: 'department:add'
+            }, {
+                name: 'delete',
+                title: '删除',
+                perms: 'department:delete'
+            }]
+        });
+
+        departmentTree = renderDepartmentTree();
+
+        eleTree.on("nodeClick(department-tree)", function (d) {
+            parentId = d.data.currentData.id;
+            $reset.click();
+        });
+
+        function reloadTable() {
+            tableIns.reload({
+                initSort: {field: sortObject.field, type: sortObject.order},
+                where: getQueryParams(),
+                page: {curr: 1}
+            });
+        }
+
+        $reset.on('click', function () {
+            $searchForm[0].reset();
+            initSortObject();
+            reloadTable();
+        });
+
+        $query.on('click', function () {
+            reloadTable();
+        });
+
+        $reloadTree.on('click', function () {
+            reloadDepartmentTree();
+        });
+
+        function renderDepartmentTree() {
+            departmentTree = eleTree.render({
+                elem:  $view.find('.department-tree'),
+                url: ctx + 'department/tree',
+                accordion: true,
+                showCheckbox: false,
+                highlightCurrent: true,
+                renderAfterExpand: false,
+                expandOnClickNode: false,
+                defaultExpandedKeys: [0],
+                request: {
+                    name: "label",
+                    key: "id",
+                    children: "children",
+                    checked: "checked",
+                    disabled: "disabled",
+                    isLeaf: "isLeaf",
+                    data: "data"
+                },
+                response: {
+                    statusName: "code",
+                    statusCode: 200,
+                    dataName: "data"
+                }
+            });
+            return departmentTree;
+        }
+
+        function reloadDepartmentTree() {
+            departmentTree = renderDepartmentTree();
+        }
+
+        initTable();
+
+        function initTable() {
+            tableIns = aloha.table.init({
+                elem: $view.find('table'),
+                id: 'department-table',
+                url: ctx + 'department/list',
+                where: getQueryParams(),
+                autoSort: false,
+                initSort: {
+                    field: sortObject.field,
+                    type: sortObject.order
+                },
+                cols: [[
+                    {type: 'checkbox'},
+                    {type: 'numbers', title: '序号'},
+                    {field: 'name', title: '名称', align: 'center'},
+                    {field: 'description', title: '描述', align: 'center'},
+                    {field: 'status', title: '状态', align: 'center',
+                        templet: function (d) {
+                            let html = '<input type="checkbox" value="' + d.id + '" id="status" lay-filter="status" name="status" lay-skin="switch" lay-text="启用|停用"';
+                            if (d.status === 1) {
+                                html += ' checked';
+                            }
+                            html += ' >';
+                            return html;
+                        }
+                    },
+                    {field: 'orderNumber', title: '排序', align: 'center', sort: true},
+                    {field: 'createTime', title: '创建时间', align: 'center', minWidth: 120, sort: true,
+                        templet: function (d) {
+                            if (d.createTime) {
+                                return layui.util.toDateString(d.createTime, 'yyyy-MM-dd');
+                            } else {
+                                return '';
+                            }
+                        }
+                    },
+                    {title: '操作', align: 'center', toolbar: '#department-option'}
+                ]]
+            });
+        }
+
+        // 监听状态变化
+        form.on('switch(status)', function (data) {
+            let status = 0;
+            const checkStatus = data.elem.checked;
+            if (checkStatus) {
+                status = 1;
+            }
+            aloha.modal.confirm('提示', '当您点击确定按钮后，将会停用此部门！', function () {
+                // 进度条
+                let loadIndex = layer.load(2);
+                aloha.patch(ctx + 'department', {id: data.value, status: status}, function () {
+                    aloha.alert.success('修改成功！');
+                    $reset.click();
+                }, loadIndex);
+            }, function () {
+                data.elem.checked = !checkStatus;
+                form.render();
+            });
+            return false;
+        });
+
+        table.on('tool(department-table)', function (obj) {
+            const data = obj.data, layEvent = obj.event;
+            if (layEvent === 'edit') {
+                aloha.modal.open('修改部门', '/department/update/' + data.id, {
+                    area: [$(window).width() <= 750 ? '95%' : '50%', '50%'],
+                    btn: ['提交', '取消'],
+                    yes: function (index, layero) {
+                        $('#department-update').find('#submit').trigger('click');
+                    },
+                    btn2: function () {
+                        layer.closeAll();
+                    }
+                });
+            } else if (layEvent === 'del') {
+                deleteByIds(data.id);
+            }
+        });
+
+        table.on('sort(department-table)', function (obj) {
+            sortObject = {field: obj.field, order: obj.type};
+            tableIns.reload({initSort: obj, where: getQueryParams()});
+        });
+
+        function getQueryParams() {
+            return $.extend({
+                name: $searchForm.find('input[name="name"]').val().trim(),
+                parentId: parentId,
+                invalidate_ie_cache: new Date().getTime()
+            }, sortObject);
+        }
+    });
+</script>

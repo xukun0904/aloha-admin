@@ -1,0 +1,108 @@
+<style>
+    #user-view {
+        padding: 20px 25px 25px 0;
+    }
+</style>
+<div class="layui-fluid" id="user-view">
+    <form class="layui-form" action="" lay-filter="user-view-form">
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">用户名：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="username" class="layui-input" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">昵称：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="nickName" class="layui-input" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">性别：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="sex" class="layui-input" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">状态：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="status" class="layui-input" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">邮箱：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="email" class="layui-input" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">联系电话：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="phone" class="layui-input" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">角色：</label>
+            <div class="layui-input-block">
+                <input type="text" name="roleNames" class="layui-input" readonly>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">部门：</label>
+            <div class="layui-input-block">
+                <input type="text" name="departmentName" class="layui-input" readonly>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">描述：</label>
+            <div class="layui-input-block">
+                <input type="text" name="description" class="layui-input" readonly>
+            </div>
+        </div>
+    </form>
+</div>
+<script data-th-inline="javascript" type="text/javascript">
+    layui.use(['aloha', 'form'], function () {
+        const $ = layui.$,
+            aloha = layui.aloha,
+            layer = layui.layer,
+            form = layui.form,
+            bean = [[${bean}]] || {};
+
+        form.render();
+
+        initValue();
+
+        function initValue() {
+            form.val("user-view-form", {
+                "username": bean.username,
+                "nickName": bean.nickName,
+                "sex": bean.sex === 0 ? '男' : '女',
+                "status": bean.status === 1 ? '有效' : '锁定',
+                "email": bean.email,
+                "phone": bean.phone,
+                "roleNames": bean.roleNames,
+                "departmentName": bean.departmentName,
+                "description": bean.description
+            });
+        }
+    });
+</script>

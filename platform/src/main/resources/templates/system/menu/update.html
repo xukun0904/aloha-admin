@@ -1,0 +1,183 @@
+<style>
+    #menu-update {
+        padding: 20px 25px 25px 0;
+    }
+</style>
+<div class="layui-fluid" id="menu-update">
+    <form class="layui-form" action="" lay-filter="menu-update-form">
+        <div class="layui-form-item aloha-hide">
+            <label class="layui-form-label aloha-form-item-require">id：</label>
+            <div class="layui-input-block">
+                <input type="text" name="id" class="layui-input" data-th-value="${bean?.id}">
+            </div>
+        </div>
+        <div class="layui-form-item aloha-hide">
+            <label class="layui-form-label aloha-form-item-require">parentId：</label>
+            <div class="layui-input-block">
+                <input type="text" name="parentId" class="layui-input" data-th-value="${bean?.parentId}">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label aloha-form-item-require">名称：</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" autocomplete="off" class="layui-input" maxlength="20" lay-verify="required|range">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label aloha-form-item-require">类型：</label>
+            <div class="layui-input-block">
+                <input type="radio" name="type" lay-filter="menu-type" value="1" title="目录" checked="">
+                <input type="radio" name="type" lay-filter="menu-type" value="2" title="菜单">
+                <input type="radio" name="type" lay-filter="menu-type" value="3" title="按钮">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">图标：</label>
+            <div class="layui-input-block">
+                <input type="text" name="icon" autocomplete="off" class="layui-input" maxlength="50" lay-verify="range" readonly>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label aloha-form-item-require">是否可见：</label>
+            <div class="layui-input-block">
+                <input type="radio" name="display" value="1" title="是" checked>
+                <input type="radio" name="display" value="0" title="否">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">路径：</label>
+            <div class="layui-input-block">
+                <input type="text" name="path" autocomplete="off" class="layui-input" maxlength="20" lay-verify="range">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">权限：</label>
+            <div class="layui-input-block">
+                <input type="text" name="permission" autocomplete="off" class="layui-input" maxlength="20" lay-verify="range">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">排序：</label>
+            <div class="layui-input-block">
+                <input type="text" name="orderNumber" autocomplete="off" class="layui-input" lay-verify="number">
+            </div>
+        </div>
+        <div class="layui-form-item aloha-hide">
+            <button class="layui-btn" lay-submit="" lay-filter="menu-update-form-submit" id="submit"></button>
+            <button type="reset" class="layui-btn" id="reset"></button>
+        </div>
+    </form>
+</div>
+<script data-th-inline="javascript" type="text/javascript">
+    layui.use(['aloha', 'form', 'validate'], function () {
+        const $ = layui.$,
+            aloha = layui.aloha,
+            layer = layui.layer,
+            form = layui.form,
+            $view = $('#menu-update'),
+            $icon = $view.find('input[name="icon"]'),
+            $title = $('.layui-layer-title'),
+            $icon_parent = $icon.parents('.layui-form-item'),
+            $path = $view.find('input[name="path"]'),
+            $path_parent = $path.parents('.layui-form-item'),
+            $order = $view.find('input[name="orderNumber"]'),
+            $order_parent = $order.parents('.layui-form-item'),
+            $permission = $view.find('input[name="permission"]'),
+            $permission_parent = $permission.parents('.layui-form-item'),
+            $display = $view.find('input[name="display"]'),
+            $display_parent = $display.parents('.layui-form-item'),
+            bean = [[${bean}]] || {},
+            validate = layui.validate;
+
+        const handleTypeChange = function (type, init) {
+            if (init) {
+                form.val("menu-update-form", {
+                    'icon': '',
+                    "path": '',
+                    "permission": '',
+                    "display": 1,
+                    "orderNumber": ''
+                });
+            }
+            if (type === '1') {
+                $title.text('修改目录');
+                $icon_parent.show();
+                $order_parent.show();
+                $display_parent.show();
+                $path_parent.hide();
+                $permission_parent.hide();
+            } else if (type === '2') {
+                $title.text('修改菜单');
+                $icon_parent.hide();
+                $path_parent.show();
+                $display_parent.show();
+                $permission_parent.show();
+                $order_parent.show();
+            } else {
+                form.val("menu-update-form", {
+                    "display": 0
+                });
+                $title.text('修改按钮');
+                $permission_parent.show();
+                $display_parent.hide();
+                $icon_parent.hide();
+                $path_parent.hide();
+                $order_parent.hide();
+            }
+        };
+
+        form.verify(validate);
+
+        form.render();
+
+        initValue();
+
+        function initValue() {
+            form.val("menu-update-form", {
+                "name": bean.name,
+                "type": bean.type,
+                "icon": bean.icon,
+                "display": bean.display,
+                "path": bean.path,
+                "permission": bean.permission,
+                "orderNumber": bean.orderNumber
+            });
+            handleTypeChange(String(bean.type), false);
+        }
+
+        form.on("radio(menu-type)", function (data) {
+            handleTypeChange(data.value, true);
+        });
+
+        $icon.on('click', function () {
+            aloha.modal.open('图标选择', '/icon', {
+                btn: ['确定'],
+                yes: function (index, layero) {
+                    const icon = $('#aloha-icon').find('.icon-active .icon-name').text();
+                    if (icon) {
+                        form.val("menu-update-form", {
+                            "icon": 'layui-icon-' + icon
+                        });
+                    } else {
+                        form.val("menu-update-form", {
+                            "icon": ''
+                        });
+                    }
+                    layer.close(index);
+                }
+            });
+        });
+
+        form.on('submit(menu-update-form-submit)', function (data) {
+            aloha.put(ctx + 'menu', data.field, function () {
+                layer.closeAll();
+                aloha.alert.success('修改成功');
+                let $aloha = $('#aloha-menu');
+                $aloha.find('#query').click();
+                $aloha.find('#reloadTree').click();
+                $('#aloha-layout').find('#reload-layout-menu').click();
+            });
+            return false;
+        });
+    });
+</script>

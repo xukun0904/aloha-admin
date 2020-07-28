@@ -1,0 +1,266 @@
+<div class="layui-fluid layui-anim aloha-anim" id="aloha-user" lay-title="用户管理">
+    <div class="layui-row aloha-container">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body aloha-table-full">
+                    <form class="layui-form layui-table-form" lay-filter="user-table-form" id="user-table-form">
+                        <div class="layui-row">
+                            <div class="layui-col-md8">
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="keyword" autocomplete="off" placeholder="输入用户名或部门" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <div class="layui-input-inline">
+                                            <input type="text" class="layui-input" name="createTimeRange" placeholder="选择创建时间范围" id="createTimeRange">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <div class="layui-input-inline">
+                                            <select name="status">
+                                                <option value="">状态</option>
+                                                <option value="1">有效</option>
+                                                <option value="0">锁定</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4 layui-col-sm12 layui-col-xs12 table-action-area" style="text-align: right">
+                                <div class="layui-btn layui-btn-sm layui-btn-primary aloha-button-blue-plain table-action" id="query"><i class="layui-icon">&#xe848;</i></div>
+                                <div class="layui-btn layui-btn-sm layui-btn-primary aloha-button-green-plain table-action" id="reset"><i class="layui-icon">&#xe79b;</i></div>
+                                <div sec:authorize="hasAnyAuthority('user:add,user:delete')" class="layui-btn layui-btn-sm layui-btn-primary table-action action-more"><i class="layui-icon">&#xe875;</i></div>
+                            </div>
+                        </div>
+                    </form>
+                    <table lay-filter="user-table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="user-option">
+    <a lay-event="view"><i class="layui-icon aloha-edit-area aloha-green">&#xe7a5;</i></a>
+    <a sec:authorize="hasAuthority('user:update')" lay-event="edit"><i class="layui-icon aloha-edit-area aloha-blue">&#xe7a4;</i></a>
+    <a sec:authorize="hasAuthority('user:delete')" lay-event="del"><i class="layui-icon aloha-edit-area aloha-red">&#xe7f9;</i></a>
+</script>
+<script data-th-inline="none" type="text/javascript">
+    layui.use(['dropdown', 'jquery', 'aloha', 'form', 'table', 'laydate'], function () {
+        let $ = layui.jquery,
+            aloha = layui.aloha,
+            form = layui.form,
+            table = layui.table,
+            laydate = layui.laydate,
+            dropdown = layui.dropdown,
+            $view = $('#aloha-user'),
+            $query = $view.find('#query'),
+            $reset = $view.find('#reset'),
+            $searchForm = $view.find('form'),
+            sortObject,
+            tableIns;
+
+        form.render();
+
+        laydate.render({
+            elem: '#createTimeRange',
+            range: true
+        });
+
+        function initSortObject() {
+            sortObject = {field: 'createTime', order: 'desc'};
+        }
+
+        initSortObject();
+
+        function deleteByIds(ids) {
+            aloha.modal.confirm('提示', '当您点击确定按钮后，这些记录将会被彻底删除！', function () {
+                // 进度条
+                let loadIndex = layer.load(2);
+                aloha.delete(ctx + 'user/' + ids, null, function () {
+                    aloha.alert.success('删除成功！');
+                    $reset.click();
+                }, loadIndex);
+            });
+        }
+
+        dropdown.render({
+            elem: $view.find('.action-more'),
+            click: function (name, elem, event) {
+                if (name === 'add') {
+                    aloha.modal.open('新增用户', '/user/add/', {
+                        btn: ['提交', '重置'],
+                        area: [$(window).width() <= 750 ? '95%' : '50%', '75%'],
+                        yes: function (index, layero) {
+                            $('#user-add').find('#submit').trigger('click');
+                        },
+                        btn2: function () {
+                            $('#user-add').find('#reset').trigger('click');
+                            return false;
+                        }
+                    });
+                } else if (name === 'delete') {
+                    const checkStatus = table.checkStatus('user-table');
+                    if (!checkStatus.data.length) {
+                        aloha.alert.warn('请勾选需要删除的用户');
+                    } else {
+                        const userIds = [];
+                        layui.each(checkStatus.data, function (key, item) {
+                            userIds.push(item.id);
+                        });
+                        deleteByIds(userIds.join(','));
+                    }
+                }
+            },
+            options: [{
+                name: 'add',
+                title: '新增',
+                perms: 'user:add'
+            }, {
+                name: 'delete',
+                title: '删除',
+                perms: 'user:delete'
+            }]
+        });
+
+        function reloadTable() {
+            tableIns.reload({
+                initSort: {field: sortObject.field, type: sortObject.order},
+                where: getQueryParams(),
+                page: {curr: 1}
+            });
+        }
+
+        $reset.on('click', function () {
+            $searchForm[0].reset();
+            initSortObject();
+            reloadTable();
+        });
+
+        $query.on('click', function () {
+            reloadTable();
+        });
+
+        initTable();
+
+        function initTable() {
+            tableIns = aloha.table.init({
+                elem: $view.find('table'),
+                id: 'user-table',
+                url: ctx + 'user/list',
+                where: getQueryParams(),
+                autoSort: false,
+                initSort: {
+                    field: sortObject.field,
+                    type: sortObject.order
+                },
+                cols: [[
+                    {type: 'checkbox'},
+                    {type: 'numbers', title: '序号'},
+                    {field: 'nickName', title: '昵称', align: 'center'},
+                    {field: 'sex', title: '性别', align: 'center',
+                        templet: function (d) {
+                            if (d.sex === 0) {
+                                return '男';
+                            } else if (d.sex === 1) {
+                                return '女';
+                            } else {
+                                return '保密';
+                            }
+                        }
+                    },
+                    {field: 'email', title: '邮箱', align: 'center'},
+                    {field: 'phone', title: '联系电话', align: 'center'},
+                    {field: 'departmentName', title: '部门', align: 'center'},
+                    {field: 'status', title: '状态', align: 'center',
+                        templet: function (d) {
+                            let html = '<input type="checkbox" value="' + d.id + '" id="status" lay-filter="status" name="status" lay-skin="switch" lay-text="有效|锁定"';
+                            if (d.status === 1) {
+                                html += ' checked';
+                            }
+                            html += ' >';
+                            return html;
+                        }
+                    },
+                    {field: 'createTime', title: '创建时间', align: 'center', minWidth: 120, sort: true,
+                        templet: function (d) {
+                            if (d.createTime) {
+                                return layui.util.toDateString(d.createTime, 'yyyy-MM-dd');
+                            } else {
+                                return '';
+                            }
+                        }
+                    },
+                    {title: '操作', align: 'center', toolbar: '#user-option'}
+                ]]
+            });
+        }
+
+        table.on('sort(user-table)', function (obj) {
+            sortObject = {field: obj.field, order: obj.type};
+            tableIns.reload({initSort: obj, where: getQueryParams()});
+        });
+
+        // 监听状态变化
+        form.on('switch(status)', function (data) {
+            let status = 0;
+            const checkStatus = data.elem.checked;
+            if (checkStatus) {
+                status = 1;
+            }
+            aloha.modal.confirm('提示', '当您点击确定按钮后，将会锁定此用户！', function () {
+                // 进度条
+                let loadIndex = layer.load(2);
+                aloha.patch(ctx + 'user', {id: data.value, status: status}, function () {
+                    aloha.alert.success('修改成功！');
+                    $reset.click();
+                }, loadIndex);
+            }, function () {
+                data.elem.checked = !checkStatus;
+                form.render();
+            });
+            return false;
+        });
+
+        table.on('tool(user-table)', function (obj) {
+            const data = obj.data, layEvent = obj.event;
+            if (layEvent === 'edit') {
+                aloha.modal.open('修改用户', '/user/update/' + data.id, {
+                    area: [$(window).width() <= 750 ? '95%' : '50%', '75%'],
+                    btn: ['提交', '取消'],
+                    yes: function (index, layero) {
+                        $('#user-update').find('#submit').trigger('click');
+                    },
+                    btn2: function () {
+                        layer.closeAll();
+                    }
+                });
+            } else if (layEvent === 'del') {
+                deleteByIds(data.id);
+            } else if (layEvent === 'view') {
+                aloha.modal.view('查看用户', '/user/view/' + data.id, {
+                    area: [$(window).width() <= 750 ? '95%' : '50%', '75%'],
+                });
+            }
+        });
+
+        function getQueryParams() {
+            let createTimeStart = '';
+            let createTimeEnd = '';
+            const createTimeRange = $searchForm.find('#createTimeRange').val().trim();
+            if (createTimeRange !== '') {
+                const createTimeArray = createTimeRange.split(' - ');
+                createTimeStart = createTimeArray[0];
+                createTimeEnd = createTimeArray[1];
+            }
+            return $.extend({
+                keyword: $searchForm.find('input[name="keyword"]').val().trim(),
+                status: $searchForm.find('select[name="status"]').val().trim(),
+                createTimeStart: createTimeStart,
+                createTimeEnd: createTimeEnd,
+                invalidate_ie_cache: new Date().getTime()
+            }, sortObject);
+        }
+    });
+</script>

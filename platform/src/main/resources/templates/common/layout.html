@@ -1,0 +1,163 @@
+<div class="layui-layout layui-layout-admin" id="aloha-layout">
+    <div class="layui-header layui-anim aloha-anim-down" id="app-header">
+        <script type="text/html" template lay-done="layui.element.render('nav','aloha-header')">
+            <ul class="layui-nav layui-layout-left" lay-filter="aloha-header">
+                <li class="layui-nav-item" lay-unselect>
+                    <a aloha-event="flexible" title="侧边伸缩">
+                        <i class="layui-icon layui-icon-shrink-right"></i>
+                    </a>
+                </li>
+                <span class="aloha-breadcrumb"></span>
+            </ul>
+            <ul class="layui-nav layui-layout-right" lay-filter="aloha-header">
+                <li class="layui-nav-item layui-user" lay-unselect>
+                    <a>
+                        <img style="width: 1.9rem;margin-right:.5rem;border-radius: 50%" src="{{= ctx + 'aloha/images/avatar/20180414165754.jpg'}}" title="头像">
+                        {{ currentUser.nickName }}
+                    </a>
+                    <dl class="layui-nav-child">
+                        <!--<dd><a class="layui-nav-child-href" id="user-profile">个人中心</a></dd>-->
+                        <dd><a class="layui-nav-child-href" id="password-update">密码修改</a></dd>
+                        <dd class="aloha-hide"><a class="layui-nav-child-href" id="reload-layout-menu">刷新菜单</a></dd>
+                        <hr/>
+                        <dd><a class="layui-nav-child-href" data-th-href="@{logout}">退出登录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </script>
+    </div>
+    <div class="aloha-tabs-hidden">
+        <script type="text/html" id="TPL-app-tabsmenu" template>
+            {{# if(layui.conf.viewTabs){ }}
+            <div class="aloha-tabs-wrap">
+              <span class="aloha-tabs-btn aloha-tabs-action aloha-tabs-prev" data-type="prev">
+                  <i class="layui-icon layui-icon-left"></i>
+              </span>
+                <span class="aloha-tabs-btn aloha-tabs-action aloha-tabs-next" data-type="next">
+                  <i class="layui-icon layui-icon-right"></i>
+              </span>
+                <span class="aloha-tabs-btn aloha-tabs-action aloha-tabs-down" data-type="down">
+                  <i class="layui-icon layui-icon-close"></i>
+              </span>
+                <ul class="aloha-tabs-menu">
+                    {{# layui.each(layui.view.tab.data,function(i, item){ }}
+                    <li data-type="page" class="aloha-tabs-btn" lay-url="{{item.fileurl}}">
+                        <i class="aloha-tabs-ball"></i>{{ item.title }}<b class="layui-icon layui-icon-close aloha-tabs-close"></b>
+                    </li>
+                    {{# }) }}
+                </ul>
+            </div>
+            {{# } }}
+        </script>
+    </div>
+    <!-- 侧边菜单 -->
+    <div class="layui-side" id="app-sidebar">
+        <div class="layui-side-scroll">
+            <div class="layui-logo" style="cursor: pointer">
+                <img data-th-src="@{aloha/images/logo.png}">
+                <span>Aloha 后台管理系统</span>
+            </div>
+            <ul id="layout-nav" class="layui-nav layui-nav-tree" lay-filter="aloha-sidebar" lay-shrink="all"></ul>
+        </div>
+    </div>
+    <!-- 主体内容 -->
+    <div class="layui-body" id="aloha-body"></div>
+</div>
+<script data-th-inline="none" type="text/javascript">
+    layui.use(['jquery', 'aloha', 'element'], function () {
+        const $ = layui.jquery,
+            $view = $('#aloha-layout'),
+            aloha = layui.aloha;
+
+        initTheme();
+
+        $view.find('#user-avatar').attr('src', ctx + "aloha/images/avatar/" + currentUser.avatar);
+
+        $view.on('click', '.layui-logo', function () {
+            aloha.navigate("/index");
+        });
+
+        $view.on('click', '#fullscreen', function () {
+            const $this = $(this);
+            const normalCls = 'layui-icon-screen-full';
+            const activeCls = 'layui-icon-screen-restore';
+            const ico = $this.find('.layui-icon');
+            if (ico.hasClass(normalCls)) {
+                const a = document.body;
+                a.webkitRequestFullScreen ? a.webkitRequestFullScreen() : a.mozRequestFullScreen ? a.mozRequestFullScreen() : a.requestFullScreen && a.requestFullscreen();
+                ico.removeClass(normalCls).addClass(activeCls)
+            } else {
+                const b = document;
+                b.webkitCancelFullScreen ? b.webkitCancelFullScreen() : b.mozCancelFullScreen ? b.mozCancelFullScreen() : b.cancelFullScreen ? b.cancelFullScreen() : b.exitFullscreen && b.exitFullscreen();
+                ico.removeClass(activeCls).addClass(normalCls)
+            }
+        });
+
+        $view.on('click', '#password-update', function () {
+            aloha.modal.view('密码修改', '/password/update', {
+                area: $(window).width() <= 750 ? '90%' : '500px',
+                btn: ['确定'],
+                yes: function () {
+                    $('#user-password-update').find('#submit').trigger('click');
+                }
+            });
+        });
+
+        $view.on('click', '#reload-layout-menu', function () {
+            reloadSlideBar();
+        });
+
+        $view.on('click', '#user-profile', function () {
+            aloha.navigate("/user/profile");
+        });
+
+        function initTheme() {
+            const theme = currentUser.theme;
+            const $sidebar = $('#app-sidebar');
+            if (theme === 0) {
+                $sidebar.removeClass('aloha-theme-white');
+            }
+            if (theme === 1) {
+                $sidebar.addClass('aloha-theme-white');
+            }
+        }
+
+        reloadSlideBar();
+
+        function reloadSlideBar() {
+            aloha.get(ctx + 'menu/trees/' + currentUser.id, {
+                invalid_ie_cache: new Date().getTime()
+            }, function (result) {
+                if (result.code === 200) {
+                    let html = '';
+                    layui.each(result.data, function (i, child) {
+                        html += ' <li class="layui-nav-item"><a lay-href="' + child.data.path + '" title="'
+                            + child.label + '"><i class="layui-icon ' + child.data.icon + '"></i>' + child.label
+                            + '</a>' + createSlideBar(child.children, 0);
+                    });
+                    $view.find('#layout-nav').html(html);
+                    layui.element.render('nav', 'aloha-sidebar');
+                    layui.aloha.sidebarFocus();
+                } else {
+                    aloha.alert.error(result.message);
+                }
+            });
+        }
+
+        function createSlideBar(data, index) {
+            if (!data || data.length === 0) return '';
+            let html = '<dl class="layui-nav-child">';
+            layui.each(data, function (i, child) {
+                const left = index === 0 ? 50 : 50 + index * 20;
+                let title = child.label;
+                if (child.data.icon) {
+                    title = '<i class="layui-icon ' + child.data.icon + '"></i>' + child.label;
+                }
+                html += '<dd><a style="padding-left:' + left + 'px" lay-href="' + (child.data.path || '') + '">' + title + '</a>';
+                if (child.children) html += createSlideBar(child.children, index + 1);
+                html += '</dd>';
+            });
+            return html + '</dl>';
+        }
+    });
+</script>

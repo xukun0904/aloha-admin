@@ -1,0 +1,22 @@
+<div class="layui-fluid" id="aloha-error-500" lay-title="服务器错误">
+    <div class="layui-row layui-col-space10" style="margin-top:100px">
+        <div class="layui-col-xs4 layui-col-xs-offset2">
+            <img data-th-src="@{aloha/images/error/500.svg}" alt="" width="85%"/>
+        </div>
+        <div class="layui-col-xs6">
+            <h1 style="font-size: 60px">500</h1>
+            <h2 class="aloha-mar-b20 aloha-c-gray">抱歉，服务器出错了</h2>
+            <button class="layui-btn layui-btn-normal">
+                返回首页
+            </button>
+        </div>
+    </div>
+</div>
+<script data-th-inline="javascript" type="text/javascript">
+    layui.use(['jquery'], function () {
+        const $ = layui.jquery, $view = $('#aloha-error-500');
+        $view.on('click', 'button', function () {
+            window.location.href = ctx + 'index';
+        });
+    });
+</script>

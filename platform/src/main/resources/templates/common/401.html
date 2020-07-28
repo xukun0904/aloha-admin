@@ -1,0 +1,20 @@
+<div class="layui-fluid" id="aloha-error-401" lay-title="用户未登录">
+    <div class="layui-row layui-col-space10" style="margin-top:100px">
+        <div class="layui-col-xs3 layui-col-xs-offset2">
+            <img data-th-src="@{aloha/images/error/403.svg}" alt="" width="85%"/>
+        </div>
+        <div class="layui-col-xs7">
+            <h1 style="font-size: 60px">401</h1>
+            <h2 class="aloha-mar-b20 aloha-c-gray">抱歉，你无权访问该页面</h2>
+            <button class="layui-btn layui-btn-normal" id="home">返回登录</button>
+        </div>
+    </div>
+</div>
+<script data-th-inline="javascript" type="text/javascript">
+    layui.use(['jquery'], function () {
+        const $ = layui.jquery, $view = $('#aloha-error-401');
+        $view.on('click', 'button', function () {
+            window.location.href = ctx + 'login';
+        });
+    });
+</script>

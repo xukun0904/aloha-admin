@@ -1,0 +1,171 @@
+<style>
+    #user-update {
+        padding: 20px 25px 25px 0;
+    }
+</style>
+<div class="layui-fluid" id="user-update">
+    <form class="layui-form" action="" lay-filter="user-update-form">
+        <div class="layui-form-item aloha-hide">
+            <label class="layui-form-label aloha-form-item-require">id：</label>
+            <div class="layui-input-block">
+                <input type="text" name="id" class="layui-input" data-th-value="${bean?.id}">
+            </div>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label aloha-form-item-require">用户名：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="username" autocomplete="off" class="layui-input" maxlength="20" lay-verify="required|range">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label aloha-form-item-require">昵称：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="nickName" autocomplete="off" class="layui-input" maxlength="20" lay-verify="required|range">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label aloha-form-item-require">性别：</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="sex" value="0" title="男" checked>
+                        <input type="radio" name="sex" value="1" title="女">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">状态：</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="status" value="1" title="有效" checked>
+                        <input type="radio" name="status" value="0" title="锁定">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">邮箱：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="email" autocomplete="off" class="layui-input" lay-verify="email">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">联系电话：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="phone" autocomplete="off" class="layui-input" lay-verify="phone">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label aloha-form-item-require">角色：</label>
+            <div class="layui-input-block">
+                <select name="roleIds" lay-verify="required" xm-select-direction="down" xm-select="user-update-role" xm-select-skin="default">
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">部门：</label>
+            <div class="layui-input-block">
+                <input type="text" name="departmentId" lay-filter="user-update-department" id="user-update-department" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">描述：</label>
+            <div class="layui-input-block">
+                <input type="text" name="description" autocomplete="off" class="layui-input" maxlength="50" lay-verify="range">
+            </div>
+        </div>
+        <div class="layui-form-item aloha-hide">
+            <button class="layui-btn" lay-submit="" lay-filter="user-update-form-submit" id="submit"></button>
+            <button type="reset" class="layui-btn" id="reset"></button>
+        </div>
+    </form>
+</div>
+<script data-th-inline="javascript" type="text/javascript">
+    layui.use(['aloha', 'form', 'formSelects', 'treeSelect', 'validate'], function () {
+        const $ = layui.$,
+            aloha = layui.aloha,
+            layer = layui.layer,
+            formSelects = layui.formSelects,
+            treeSelect = layui.treeSelect,
+            form = layui.form,
+            $view = $('#user-update'),
+            bean = [[${bean}]] || {},
+            validate = layui.validate;
+
+        form.verify(validate);
+
+        form.render();
+
+        formSelects.config('user-update-role', {
+            searchUrl: ctx + 'role/list',
+            response: {
+                statusCode: 200
+            },
+            beforeSuccess: function (id, url, searchVal, result) {
+                const data = result.data;
+                const tranData = [];
+                for (let i = 0; i < data.length; i++) {
+                    tranData.push({
+                        name: data[i].name,
+                        value: data[i].id
+                    })
+                }
+                result.data = tranData;
+                return result;
+            },
+            success: function () {
+                formSelects.value('user-update-role', bean.roleIds.split(','));
+            },
+            error: function (id, url, searchVal, err) {
+                console.error(err);
+                aloha.alert.error('获取角色列表失败');
+            }
+        });
+
+        treeSelect.render({
+            elem: $view.find('#user-update-department'),
+            type: 'get',
+            data: ctx + 'department/select/trees',
+            placeholder: '请选择',
+            search: true,
+            success: function () {
+                treeSelect.checkNode('user-update-department', bean.departmentId);
+            }
+        });
+
+        initValue();
+
+        function initValue() {
+            form.val("user-update-form", {
+                "username": bean.username,
+                "nickName": bean.nickName,
+                "sex": bean.sex,
+                "status": bean.status,
+                "email": bean.email,
+                "phone": bean.phone,
+                "description": bean.description
+            });
+        }
+
+        form.on('submit(user-update-form-submit)', function (data) {
+            aloha.put(ctx + 'user', data.field, function () {
+                layer.closeAll();
+                aloha.alert.success('修改成功');
+                $('#aloha-user').find('#query').click();
+            });
+            return false;
+        });
+    });
+</script>

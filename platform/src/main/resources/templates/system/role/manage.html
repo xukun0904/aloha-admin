@@ -1,0 +1,308 @@
+<div class="layui-fluid layui-anim aloha-anim" id="aloha-role" lay-title="角色管理">
+    <div class="layui-row layui-col-space8 aloha-container">
+        <div class="layui-col-md7 layui-col-sm6 layui-col-xs12">
+            <div class="layui-card">
+                <div class="layui-card-body aloha-table-full">
+                    <form class="layui-form layui-table-form" lay-filter="role-table-form" id="role-table-form">
+                        <div class="layui-row">
+                            <div class="layui-col-md9 layui-col-sm9 layui-col-xs9">
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label layui-form-label-sm">角色名称</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="name" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md3 layui-col-sm12 layui-col-xs12 table-action-area">
+                                <div class="layui-btn layui-btn-sm layui-btn-primary aloha-button-blue-plain table-action" id="query"><i class="layui-icon">&#xe848;</i></div>
+                                <div class="layui-btn layui-btn-sm layui-btn-primary aloha-button-green-plain table-action" id="reset"><i class="layui-icon">&#xe79b;</i></div>
+                                <div sec:authorize="hasAnyAuthority('role:add,role:delete')" class="layui-btn layui-btn-sm layui-btn-primary table-action action-more"><i class="layui-icon">&#xe875;</i></div>
+                            </div>
+                        </div>
+                    </form>
+                    <table lay-filter="role-table"></table>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md5 layui-col-sm6 layui-col-xs12">
+            <div class="layui-card">
+                <div class="layui-card-header" id="form-header">新增角色</div>
+                <div class="layui-card-body aloha-table-full">
+                    <form class="layui-form layui-table-form" action="" lay-filter="role-form">
+                        <div class="layui-form-item aloha-hide">
+                            <label class="layui-form-label aloha-form-item-require">角色ID：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="id" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label aloha-form-item-require">角色名称：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="name" autocomplete="off" class="layui-input" maxlength="20" lay-verify="required|range">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">角色描述：</label>
+                            <div class="layui-input-block">
+                                <textarea name="description" maxlength="100" lay-verify="range" class="layui-textarea"></textarea>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">角色权限：</label>
+                            <div class="layui-input-block menu-tree" style="margin-top: .8rem;"></div>
+                        </div>
+                        <div class="layui-form-item aloha-hide">
+                            <button type="reset" class="layui-btn" id="reset-form"></button>
+                            <button class="layui-btn" lay-submit="" lay-filter="role-form-submit" id="submit-form"></button>
+                        </div>
+                    </form>
+                </div>
+                <div class="layui-card-footer">
+                    <button class="layui-btn" id="submit">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="role-option">
+    <span sec:authorize="!hasAnyAuthority('role:update,role:delete')">
+        <span class="layui-badge-dot aloha-bg-orange"></span>无权限
+    </span>
+    <a sec:authorize="hasAuthority('role:update')" lay-event="edit"><i class="layui-icon aloha-edit-area aloha-blue">&#xe7a4;</i></a>
+    <a sec:authorize="hasAuthority('role:delete')" lay-event="del"><i class="layui-icon aloha-edit-area aloha-red">&#xe7f9;</i></a>
+</script>
+<script data-th-inline="none" type="text/javascript">
+    layui.use(['dropdown', 'jquery', 'aloha', 'form', 'eleTree', 'table', 'validate'], function () {
+        let $ = layui.jquery,
+            aloha = layui.aloha,
+            form = layui.form,
+            table = layui.table,
+            eleTree = layui.eleTree,
+            dropdown = layui.dropdown,
+            validate = layui.validate,
+            $view = $('#aloha-role'),
+            $query = $view.find('#query'),
+            $reset = $view.find('#reset'),
+            $submit = $view.find('#submit'),
+            $searchForm = $view.find('#role-table-form'),
+            $header = $view.find('#form-header'),
+            sortObject,
+            tableIns;
+
+        form.verify(validate);
+
+        form.render();
+
+        function initSortObject() {
+            sortObject = {field: 'createTime', order: 'desc'};
+        }
+
+        initSortObject();
+
+        initTable();
+
+        const menuTree = eleTree.render({
+            elem: $view.find('.menu-tree'),
+            url: ctx + 'menu/trees',
+            showCheckbox: true,
+            accordion: true,
+            checkStrictly: true,
+            renderAfterExpand: false,
+            request: {
+                name: "label",
+                key: "id",
+                children: "children",
+                checked: "checked",
+                disabled: "disabled",
+                isLeaf: "isLeaf",
+                data: "data"
+            },
+            response: {
+                statusName: "code",
+                statusCode: 200,
+                dataName: "data"
+            }
+        });
+
+        function deleteByIds(ids) {
+            aloha.modal.confirm('删除角色', '确定删除该角色？', function () {
+                // 进度条
+                let loadIndex = layer.load(2);
+                aloha.delete(ctx + 'role/' + ids, null, function () {
+                    aloha.alert.success('删除角色成功');
+                    $query.trigger('click');
+                }, loadIndex);
+            });
+        }
+
+        dropdown.render({
+            elem: $view.find('.action-more'),
+            click: function (name, elem, event) {
+                const checkStatus = table.checkStatus('role-table');
+                if (name === 'add') {
+                    resetRoleForm();
+                }
+                if (name === 'delete') {
+                    if (!checkStatus.data.length) {
+                        aloha.alert.warn('请选择需要删除的角色');
+                    } else {
+                        const roleIds = [];
+                        layui.each(checkStatus.data, function (key, item) {
+                            roleIds.push(item.id);
+                        });
+                        deleteByIds(roleIds.join(','));
+                    }
+                }
+            },
+            options: [{
+                name: 'add',
+                title: '新增角色',
+                perms: 'role:add'
+            }, {
+                name: 'delete',
+                title: '删除角色',
+                perms: 'role:delete'
+            }]
+        });
+
+        table.on('tool(role-table)', function (obj) {
+            const data = obj.data, layEvent = obj.event;
+            if (layEvent === 'edit') {
+                $header.text('修改角色');
+                form.val("role-form", {
+                    "id": data.id,
+                    "name": data.name,
+                    "description": data.description
+                });
+                if (data.menuIds) {
+                    menuTree.setChecked(data.menuIds.split(','), true);
+                } else {
+                    menuTree.setChecked([], true);
+                }
+            }
+            if (layEvent === 'del') {
+                deleteByIds(data.id);
+            }
+        });
+
+        function reloadTable() {
+            tableIns.reload({
+                initSort: {field: sortObject.field, type: sortObject.order},
+                where: getQueryParams(),
+                page: {curr: 1}
+            });
+        }
+
+        table.on('sort(role-table)', function (obj) {
+            sortObject = {field: obj.field, order: obj.type};
+            tableIns.reload({initSort: obj, where: getQueryParams()});
+        });
+
+        $query.on('click', function () {
+            resetRoleForm();
+            reloadTable();
+        });
+
+        $reset.on('click', function () {
+            resetRoleForm();
+            $searchForm[0].reset();
+            initSortObject();
+            reloadTable();
+        });
+
+        $submit.on('click', function () {
+            $view.find('#submit-form').trigger('click');
+        });
+
+        function initTable() {
+            tableIns = aloha.table.init({
+                elem: $view.find('table'),
+                id: 'role-table',
+                url: ctx + 'role/page',
+                where: getQueryParams(),
+                autoSort: false,
+                initSort: {
+                    field: sortObject.field,
+                    type: sortObject.order
+                },
+                cols: [[
+                    {type: 'checkbox'},
+                    {field: 'name', align: 'center', title: '角色名称'},
+                    {field: 'description', align: 'center', title: '角色描述'},
+                    {field: 'createTime', align: 'center', title: '创建时间', sort: true,
+                        templet: function (d) {
+                            if (d.createTime) {
+                                return layui.util.toDateString(d.createTime, 'yyyy-MM-dd');
+                            } else {
+                                return '';
+                            }
+                        }
+                    },
+                    {title: '操作', align: 'center', toolbar: '#role-option'}
+                ]]
+            });
+        }
+
+        function getQueryParams() {
+            return $.extend({
+                name: $searchForm.find('input[name="name"]').val().trim(),
+                invalidate_ie_cache: new Date().getTime()
+            }, sortObject);
+        }
+
+        function resetRoleForm() {
+            $view.find('#reset-form').trigger('click');
+            $header.text('新增角色');
+            menuTree.setChecked([], true);
+            menuTree.unExpandAll();
+        }
+
+        const addOrUpdateRole = function (data) {
+            if (data.id && $header.text() === '修改角色') {
+                // 进度条
+                let loadIndex = layer.load(2);
+                aloha.put(ctx + 'role', data, function () {
+                    aloha.get(ctx + 'authorities', {invalid_ie_cache: new Date().getTime()}, function (result) {
+                        console.log(result.data)
+                        if (result.code === 200) {
+                            // 更新用户权限
+                            currentUser.permissionSet = result.data;
+                            aloha.alert.success('修改角色成功,刷新页面后权限生效');
+                            $query.trigger('click');
+                            $('#aloha-layout').find('#reload-layout-menu').click();
+                        } else {
+                            aloha.alert.error(result.message);
+                        }
+                        layer.close(loadIndex);
+                    });
+                });
+            } else {
+                // 进度条
+                let loadIndex = layer.load(2);
+                aloha.post(ctx + 'role', data, function () {
+                    aloha.alert.success('新增角色成功');
+                    $query.trigger('click');
+                }, loadIndex);
+            }
+        };
+
+        form.on('submit(role-form-submit)', function (data) {
+            const selected = menuTree.getChecked(false, true);
+            const menuIds = [];
+            layui.each(selected, function (key, item) {
+                menuIds.push(item.id)
+            });
+            data.field.menuIds = menuIds.join(',');
+            if (!menuIds.length) {
+                aloha.modal.confirm('提示', '当前角色未授予任何权限，是否继续？', function () {
+                    addOrUpdateRole(data.field);
+                });
+            } else {
+                addOrUpdateRole(data.field);
+            }
+            return false;
+        });
+    });
+</script>

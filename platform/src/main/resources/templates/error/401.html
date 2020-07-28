@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Aloha 后台管理系统</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" th:href="@{layui/css/layui.css}" media="all">
+    <link rel="stylesheet" th:href="@{aloha/css/aloha.css}" media="all">
+    <link rel="icon" th:href="@{aloha/images/favicon.ico}" type="image/x-icon"/>
+</head>
+<body>
+<div class="layui-fluid" id="aloha-error-401" lay-title="401">
+    <div class="layui-row layui-col-space10" style="margin-top:100px">
+        <div class="layui-col-xs3 layui-col-xs-offset2">
+            <img data-th-src="@{aloha/images/error/403.svg}" alt="" width="85%"/>
+        </div>
+        <div class="layui-col-xs7">
+            <h1 style="font-size: 60px">401</h1>
+            <h2 class="aloha-mar-b20 aloha-c-gray">抱歉，你无权访问该页面</h2>
+            <button class="layui-btn layui-btn-normal" id="home">返回登录</button>
+        </div>
+    </div>
+</div>
+<script th:src="@{layui/layui.js}"></script>
+<script data-th-inline="javascript" type="text/javascript">
+    layui.use(['jquery'], function () {
+        const $ = layui.jquery,
+                  ctx = [[@{/}]],
+                  $view = $('#aloha-error-401');
+        $view.on('click', 'button', function () {
+            window.location.href = ctx + 'login';
+        });
+    });
+</script>
+</body>
+</html>

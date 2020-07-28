@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: aloha-admin
+  profiles:
+    active: db,redis
+  thymeleaf:
+    cache: false
+server:
+  # 服务端口
+  port: ${APP_PORT:8091}
+aloha:
+  # 缓存过期时间，单位小时
+  cache-expire: 5
+  security:
+    # 拦截忽略路径
+    ignore_urls: /aloha/**,/layui/**,/auth/**,/login,/swagger-ui.html,/swagger-resources/**,/webjars/**,/*/api-docs
+    # 登录地址
+    login_page: /login
+  captcha:
+    # 验证码图片宽度，px
+    width: 115
+    # 验证码图片高度，px
+    height: 42
+    # 验证码位数
+    len: 4
+    # 验证码类型：1. 数字+字母；2. 纯数字；3. 纯字母
+    char_type: 2
+    # 验证码有效时间，单位秒
+    timeout: 120
+  jwt:
+    # 登录校验的密钥
+    secret: AlohaAdmin@Login(Auth}*^31)&XuKun%
+    # 过期时间,单位分钟
+    expire: 300
+    # cookie名字
+    cookie-name: ALOHA_TOKEN
+    # cookie过期时间,单位秒
+    cookie-max-age: 18000
+    # header名称
+    header: Authorization
+    # 令牌前缀
+    token-start-with: Bearer
