@@ -1,23 +1,27 @@
 package fun.xukun.platform.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import fun.xukun.common.exception.ExceptionCast;
 import fun.xukun.common.model.constant.StringPool;
 import fun.xukun.common.model.request.PageRequest;
 import fun.xukun.common.model.response.CommonCode;
 import fun.xukun.common.model.response.PageResponse;
+import fun.xukun.common.util.ObjectUtils;
 import fun.xukun.common.util.PageUtils;
 import fun.xukun.common.util.StringUtils;
 import fun.xukun.model.domain.system.Role;
 import fun.xukun.model.domain.system.RoleMenu;
+import fun.xukun.model.domain.system.UserRole;
 import fun.xukun.model.domain.system.ext.RoleExt;
-import fun.xukun.platform.system.manager.RoleManager;
-import fun.xukun.platform.system.manager.RoleMenuManager;
+import fun.xukun.model.manager.RoleManager;
+import fun.xukun.model.manager.RoleMenuManager;
+import fun.xukun.model.manager.UserRoleManager;
 import fun.xukun.platform.system.service.RoleService;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 日期:2020/6/9
@@ -35,26 +40,48 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
+@RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
     private final RoleManager roleManager;
 
     private final RoleMenuManager roleMenuManager;
 
-    public RoleServiceImpl(RoleManager roleManager, RoleMenuManager roleMenuManager) {
-        this.roleManager = roleManager;
-        this.roleMenuManager = roleMenuManager;
-    }
+    private final UserRoleManager userRoleManager;
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public PageResponse<RoleExt> pageRoles(Role role, PageRequest pageRequest) {
+        // 开始分页
         IPage<Role> page = PageUtils.getPage(pageRequest);
-        IPage<RoleExt> rolePage = roleManager.getBaseMapper().listRoles(page, role);
-        return PageUtils.convertPageResponse(rolePage);
+        // 模糊角色名
+        LambdaQueryWrapper<Role> wrapper = Wrappers.lambdaQuery();
+        wrapper.like(StringUtils.isNotBlank(role.getName()), Role::getName, role.getName());
+        IPage<Role> rolePage = roleManager.page(page, wrapper);
+        // 转化成RoleExt分页对象
+        IPage<RoleExt> roleExtPage = new Page<>();
+        roleExtPage.setTotal(rolePage.getTotal());
+        // 查找角色与菜单关系表
+        List<Role> records = rolePage.getRecords();
+        List<String> roleIds = records.stream().map(Role::getId).collect(Collectors.toList());
+        LambdaQueryWrapper<RoleMenu> roleMenuWrapper = Wrappers.lambdaQuery();
+        roleMenuWrapper.in(RoleMenu::getRoleId, roleIds);
+        List<RoleMenu> rms = roleMenuManager.list(roleMenuWrapper);
+        // 封装成RoleExt对象
+        List<RoleExt> res = new ArrayList<>();
+        for (Role record : records) {
+            // 查找所有对应菜单集合用逗号分隔
+            String menuIds = rms.stream().filter(rm -> rm.getRoleId().equals(record.getId())).map(RoleMenu::getMenuId)
+                    .collect(Collectors.joining(StringPool.COMMA));
+            RoleExt target = new RoleExt();
+            target.setMenuIds(menuIds);
+            ObjectUtils.copyProperties(record, target);
+            res.add(target);
+        }
+        roleExtPage.setRecords(res);
+        return PageUtils.convertPageResponse(roleExtPage);
     }
 
-    @CacheEvict(cacheNames = {"role_cache"}, allEntries = true, beforeInvocation = true)
     @Override
     public void update(RoleExt role) {
         role.setUpdateTime(LocalDateTime.now());
@@ -70,7 +97,6 @@ public class RoleServiceImpl implements RoleService {
         insertRoleMenus(role.getId(), role.getMenuIds());
     }
 
-    @CacheEvict(cacheNames = "role_cache", allEntries = true, beforeInvocation = true)
     @Override
     public void insert(RoleExt role) {
         role.setId(null);
@@ -83,7 +109,6 @@ public class RoleServiceImpl implements RoleService {
         insertRoleMenus(role.getId(), role.getMenuIds());
     }
 
-    @CacheEvict(cacheNames = {"role_cache"}, allEntries = true, beforeInvocation = true)
     @Override
     public void multipleDelete(String ids) {
         List<String> idList = StringUtils.split(ids, StringPool.COMMA);
@@ -91,20 +116,22 @@ public class RoleServiceImpl implements RoleService {
         if (!isSuccess) {
             ExceptionCast.cast(CommonCode.SAVE_FAIL);
         }
-        // 删除关系
-        LambdaQueryWrapper<RoleMenu> queryWrapper = Wrappers.lambdaQuery();
+        // 删除菜单与角色关系
+        LambdaUpdateWrapper<RoleMenu> queryWrapper = Wrappers.lambdaUpdate();
         queryWrapper.in(RoleMenu::getRoleId, idList);
         this.roleMenuManager.remove(queryWrapper);
+        // 删除用户与角色关系
+        LambdaUpdateWrapper<UserRole> userWrapper = Wrappers.lambdaUpdate();
+        userWrapper.in(UserRole::getRoleId, idList);
+        userRoleManager.remove(userWrapper);
     }
 
-    @Cacheable(cacheNames = "role_cache", key = "'roles'")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<Role> listRoles() {
         return this.roleManager.list();
     }
 
-    @Cacheable(cacheNames = "role_cache", key = "'roles_' + #roleIds")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<String> listPermissionByRoleIds(String roleIds) {
@@ -122,5 +149,11 @@ public class RoleServiceImpl implements RoleService {
             roleMenus.add(roleMenu);
         }
         this.roleMenuManager.saveBatch(roleMenus);
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
+    @Override
+    public List<Role> listByUserId(String userId) {
+        return this.roleManager.getBaseMapper().listByUserId(userId);
     }
 }

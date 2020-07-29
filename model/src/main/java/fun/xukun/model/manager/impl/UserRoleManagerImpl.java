@@ -1,9 +1,9 @@
-package fun.xukun.platform.system.manager.impl;
+package fun.xukun.model.manager.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import fun.xukun.model.domain.system.UserRole;
+import fun.xukun.model.manager.UserRoleManager;
 import fun.xukun.model.mapper.system.UserRoleMapper;
-import fun.xukun.platform.system.manager.UserRoleManager;
 import org.springframework.stereotype.Service;
 
 /**

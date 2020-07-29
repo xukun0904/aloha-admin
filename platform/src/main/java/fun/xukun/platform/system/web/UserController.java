@@ -80,4 +80,11 @@ public class UserController extends BaseController {
         service.updatePassword(user, oldPassword, newPassword);
         return ResponseResultBuilder.builder().success();
     }
+
+    @GetMapping("verify")
+    @ApiOperation(value = "校验用户名是否没被占用", notes = "校验用户名是否没被占用,支持GET方式", response = ResponseResult.class)
+    public ResponseResult<Boolean> verify(String username, String id) {
+        boolean isOccupy = this.service.verify(username,id);
+        return ResponseResultBuilder.builder().success(isOccupy);
+    }
 }

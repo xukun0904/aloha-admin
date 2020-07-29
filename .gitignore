@@ -1,2 +1,5 @@
-/aloha-admin.iml
 /.idea/
+/aloha-admin.iml
+/platform/platform.iml
+/model/model.iml
+/common/common.iml

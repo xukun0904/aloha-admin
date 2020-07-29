@@ -160,10 +160,18 @@
         }
 
         form.on('submit(user-update-form-submit)', function (data) {
-            aloha.put(ctx + 'user', data.field, function () {
-                layer.closeAll();
-                aloha.alert.success('修改成功');
-                $('#aloha-user').find('#query').click();
+            aloha.get(ctx + 'user/verify', {username: data.field.username, id: data.field.id}, function (result) {
+                if (result.code === 200) {
+                    if (result.data) {
+                        aloha.put(ctx + 'user', data.field, function () {
+                            layer.closeAll();
+                            aloha.alert.success('修改成功');
+                            $('#aloha-user').find('#query').click();
+                            return false;
+                        });
+                    }
+                }
+                aloha.alert.error('用户名已被使用');
             });
             return false;
         });

@@ -59,4 +59,12 @@ public interface RoleService {
      * @return 权限字符串列表
      */
     List<String> listPermissionByRoleIds(String roleIds);
+
+    /**
+     * 根据用户主键获取角色列表
+     *
+     * @param userId 用户主键
+     * @return 角色列表
+     */
+    List<Role> listByUserId(String userId);
 }

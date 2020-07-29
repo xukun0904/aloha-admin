@@ -39,19 +39,15 @@
     </select>
 
     <select id="getUserById" resultType="fun.xukun.model.domain.system.ext.UserExt">
-        SELECT u.*, GROUP_CONCAT(r.id) AS roleIds, GROUP_CONCAT(r.name) AS roleNames,d.name AS departmentName FROM user u
+        SELECT u.*, d.name AS departmentName FROM user u
         LEFT JOIN department d ON d.id = u.department_id
-        LEFT JOIN user_role ur ON ur.user_id = u.id
-        LEFT JOIN role r ON r.id = ur.role_id
         WHERE u.id = #{id}
         GROUP BY u.id
     </select>
 
     <select id="getByUsername" resultType="fun.xukun.model.domain.system.ext.UserExt">
-        SELECT u.*, GROUP_CONCAT(r.name) AS roleNames, GROUP_CONCAT(r.id) AS roleIds FROM user u
+        SELECT u.*, d.name AS departmentName AS roleIds FROM user u
         LEFT JOIN department d ON d.id = u.department_id
-        LEFT JOIN user_role ur ON ur.user_id = u.id
-        LEFT JOIN role r ON r.id = ur.role_id
         WHERE u.username = #{username}
         GROUP BY u.id
     </select>

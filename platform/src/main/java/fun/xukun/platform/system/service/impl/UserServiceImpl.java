@@ -12,17 +12,18 @@ import fun.xukun.common.model.response.CommonCode;
 import fun.xukun.common.model.response.PageResponse;
 import fun.xukun.common.util.PageUtils;
 import fun.xukun.common.util.StringUtils;
+import fun.xukun.model.domain.system.Role;
 import fun.xukun.model.domain.system.User;
 import fun.xukun.model.domain.system.UserRole;
 import fun.xukun.model.domain.system.ext.UserExt;
 import fun.xukun.model.domain.system.request.UserQuery;
 import fun.xukun.model.domain.system.response.AuthCode;
+import fun.xukun.model.manager.UserManager;
+import fun.xukun.model.manager.UserRoleManager;
 import fun.xukun.platform.security.model.UserInfo;
-import fun.xukun.platform.system.manager.UserManager;
-import fun.xukun.platform.system.manager.UserRoleManager;
+import fun.xukun.platform.system.service.RoleService;
 import fun.xukun.platform.system.service.UserService;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 日期:2020/6/22
@@ -41,26 +43,22 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final UserManager manager;
+    private final UserManager userManager;
 
     private final UserRoleManager userRoleManager;
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserManager manager, UserRoleManager userRoleManager, PasswordEncoder passwordEncoder) {
-        this.manager = manager;
-        this.userRoleManager = userRoleManager;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final RoleService roleService;
 
-    @CacheEvict(cacheNames = {"user_cache"}, allEntries = true, beforeInvocation = true)
     @Override
     public void update(UserExt bean) {
         // 设置更新时间
         bean.setUpdateTime(LocalDateTime.now());
-        boolean isSuccess = this.manager.updateById(bean);
+        boolean isSuccess = this.userManager.updateById(bean);
         if (!isSuccess) {
             ExceptionCast.cast(CommonCode.UPDATE_FAIL);
         }
@@ -76,7 +74,7 @@ public class UserServiceImpl implements UserService {
         bean.setId(null);
         bean.setCreateTime(LocalDateTime.now());
         bean.setPassword(passwordEncoder.encode(Constants.DEFAULT_PASSWORD));
-        boolean isSuccess = this.manager.save(bean);
+        boolean isSuccess = this.userManager.save(bean);
         if (!isSuccess) {
             ExceptionCast.cast(CommonCode.SAVE_FAIL);
         }
@@ -95,12 +93,11 @@ public class UserServiceImpl implements UserService {
         this.userRoleManager.saveBatch(userRoles);
     }
 
-    @CacheEvict(cacheNames = "user_cache", allEntries = true, beforeInvocation = true)
     @Override
     public void multipleDelete(String ids) {
         List<String> idList = StringUtils.split(ids, StringPool.COMMA);
         // 删除
-        this.manager.removeByIds(idList);
+        this.userManager.removeByIds(idList);
         // 删除用户角色关系
         LambdaQueryWrapper<UserRole> removeWrapper = Wrappers.lambdaQuery();
         removeWrapper.in(UserRole::getUserId, idList);
@@ -112,35 +109,45 @@ public class UserServiceImpl implements UserService {
     public PageResponse<UserExt> list(UserQuery query, PageRequest pageRequest) {
         // 分页查询，默认根据主键倒序
         IPage<User> page = PageUtils.getPage(pageRequest);
-        IPage<UserExt> userPage = manager.listUsers(page, query);
+        IPage<UserExt> userPage = userManager.listUsers(page, query);
         return PageUtils.convertPageResponse(userPage);
     }
 
-    @Cacheable(cacheNames = "user_cache", key = "'user_' + #id")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public UserExt getById(String id) {
-        return manager.getUserById(id);
+        UserExt userExt = userManager.getUserById(id);
+        return obtainUserExt(userExt);
+    }
+
+    private UserExt obtainUserExt(UserExt userExt) {
+        // 根据用户主键查询角色列表
+        List<Role> roles = roleService.listByUserId(userExt.getId());
+        String roleIds = roles.stream().map(Role::getId).collect(Collectors.joining(StringPool.COMMA));
+        String roleNames = roles.stream().map(Role::getName).collect(Collectors.joining(StringPool.COMMA));
+        // 赋值
+        userExt.setRoleIds(roleIds);
+        userExt.setRoleNames(roleNames);
+        return userExt;
     }
 
     @Override
     public void updatePatch(User bean) {
         // 设置更新时间
         bean.setUpdateTime(LocalDateTime.now());
-        boolean isSuccess = this.manager.updateById(bean);
+        boolean isSuccess = this.userManager.updateById(bean);
         if (!isSuccess) {
             ExceptionCast.cast(CommonCode.UPDATE_FAIL);
         }
     }
 
-    @Cacheable(cacheNames = "user_cache", key = "'user_' + #username")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public UserExt getByUsername(String username) {
-        return manager.getByUsername(username);
+        UserExt userExt = userManager.getByUsername(username);
+        return obtainUserExt(userExt);
     }
 
-    @CacheEvict(cacheNames = "user_cache", allEntries = true, beforeInvocation = true)
     @Override
     public void updatePassword(UserInfo currentUser, String oldPassword, String newPassword) {
         if (!passwordEncoder.matches(oldPassword, currentUser.getPassword())) {
@@ -150,6 +157,15 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         LambdaUpdateWrapper<User> wrapper = Wrappers.lambdaUpdate();
         wrapper.eq(User::getUsername, currentUser.getUsername());
-        this.manager.getBaseMapper().update(user, wrapper);
+        this.userManager.getBaseMapper().update(user, wrapper);
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
+    @Override
+    public boolean verify(String username, String id) {
+        LambdaQueryWrapper<User> wrapper = Wrappers.lambdaQuery();
+        wrapper.eq(User::getUsername, username);
+        wrapper.ne(StringUtils.isNotBlank(id), User::getId, id);
+        return this.userManager.count(wrapper) <= 0;
     }
 }

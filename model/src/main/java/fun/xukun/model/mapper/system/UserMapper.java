@@ -17,9 +17,28 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface UserMapper extends BaseMapper<User> {
 
+    /**
+     * 分页查询
+     *
+     * @param query 查询参数
+     * @param page  分页参数
+     * @return 分页结果
+     */
     IPage<UserExt> listUsers(IPage<User> page, @Param("query") UserQuery query);
 
+    /**
+     * 根据主键获取用户
+     *
+     * @param id 主键
+     * @return 用户
+     */
     UserExt getUserById(@Param("id") String id);
 
+    /**
+     * 根据用户名获取用户
+     *
+     * @param username 主键
+     * @return 用户
+     */
     UserExt getByUsername(@Param("username") String username);
 }

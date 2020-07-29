@@ -1,6 +1,7 @@
 package fun.xukun.platform.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import fun.xukun.common.exception.ExceptionCast;
@@ -14,11 +15,11 @@ import fun.xukun.common.util.CollectionUtils;
 import fun.xukun.common.util.PageUtils;
 import fun.xukun.common.util.StringUtils;
 import fun.xukun.model.domain.system.Menu;
-import fun.xukun.platform.system.manager.MenuManager;
+import fun.xukun.model.domain.system.RoleMenu;
+import fun.xukun.model.manager.MenuManager;
+import fun.xukun.model.manager.RoleMenuManager;
 import fun.xukun.platform.system.service.MenuService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,8 @@ public class MenuServiceImpl implements MenuService {
 
     private final MenuManager menuManager;
 
+    private final RoleMenuManager roleMenuManager;
+
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<EleTree<Menu>> listMenuTreeByUserId(String userId) {
@@ -53,7 +56,6 @@ public class MenuServiceImpl implements MenuService {
         return getMenuTrees(menuTrees);
     }
 
-    @Cacheable(cacheNames = "menu_cache", key = "'eletrees'")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<EleTree<Menu>> listMenuTree() {
@@ -71,7 +73,6 @@ public class MenuServiceImpl implements MenuService {
         return menuManager.list(queryWrapper);
     }
 
-    @Cacheable(cacheNames = "menu_cache", key = "'eletree'")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public EleTree<Menu> getMenuTree() {
@@ -82,7 +83,6 @@ public class MenuServiceImpl implements MenuService {
         return buildMenuTree(menuTrees);
     }
 
-    @CacheEvict(cacheNames = "menu_cache", allEntries = true, beforeInvocation = true)
     @Override
     public void update(Menu menu) {
         // 设置更新时间
@@ -93,7 +93,6 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
-    @CacheEvict(cacheNames = "menu_cache", allEntries = true, beforeInvocation = true)
     @Override
     public void insert(Menu menu) {
         menu.setId(null);
@@ -104,12 +103,15 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
-    @CacheEvict(cacheNames = "menu_cache", allEntries = true, beforeInvocation = true)
     @Override
     public void multipleDelete(String ids) {
         List<String> idList = StringUtils.split(ids, StringPool.COMMA);
         // 删除菜单
         this.menuManager.removeByIds(idList);
+        LambdaUpdateWrapper<RoleMenu> wrapper = Wrappers.lambdaUpdate();
+        wrapper.in(RoleMenu::getMenuId, idList);
+        // 删除菜单权限关系
+        roleMenuManager.remove(wrapper);
         // 递归删除子菜单
         this.delete(idList);
     }
@@ -135,7 +137,6 @@ public class MenuServiceImpl implements MenuService {
         return PageUtils.convertPageResponse(rolePage);
     }
 
-    @Cacheable(cacheNames = "menu_cache", key = "'menu_' + #id")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public Menu getById(String id) {
@@ -149,6 +150,10 @@ public class MenuServiceImpl implements MenuService {
         List<Menu> list = this.menuManager.list(queryWrapper);
         if (CollectionUtils.isNotEmpty(list)) {
             List<String> childrenIdList = list.stream().map(Menu::getId).collect(Collectors.toList());
+            LambdaUpdateWrapper<RoleMenu> wrapper = Wrappers.lambdaUpdate();
+            wrapper.in(RoleMenu::getMenuId, childrenIdList);
+            // 删除菜单权限关系
+            roleMenuManager.remove(wrapper);
             // 不为空则删除
             this.menuManager.removeByIds(childrenIdList);
             // 递归操作

@@ -15,10 +15,9 @@ import fun.xukun.common.util.CollectionUtils;
 import fun.xukun.common.util.PageUtils;
 import fun.xukun.common.util.StringUtils;
 import fun.xukun.model.domain.system.Department;
-import fun.xukun.platform.system.manager.DepartmentManager;
+import fun.xukun.model.manager.DepartmentManager;
 import fun.xukun.platform.system.service.DepartmentService;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,15 +36,11 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
+@RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
 
-    private final DepartmentManager manager;
+    private final DepartmentManager departmentManager;
 
-    public DepartmentServiceImpl(DepartmentManager manager) {
-        this.manager = manager;
-    }
-
-    @Cacheable(cacheNames = "department_cache", key = "'eletrees'")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<EleTree<Department>> listEleTree() {
@@ -61,10 +56,9 @@ public class DepartmentServiceImpl implements DepartmentService {
         queryWrapper.eq(Department::getStatus, Constants.DEPARTMENT_STATUS_ENABLE);
         queryWrapper.orderByAsc(Department::getOrderNumber);
         queryWrapper.orderByDesc(Department::getId);
-        return manager.list(queryWrapper);
+        return departmentManager.list(queryWrapper);
     }
 
-    @Cacheable(cacheNames = "department_cache", key = "'selecttrees'")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<SelectTree<Department>> listSelectTree() {
@@ -115,48 +109,44 @@ public class DepartmentServiceImpl implements DepartmentService {
         return trees;
     }
 
-    @Cacheable(cacheNames = "department_cache", key = "'eletree'")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public EleTree<Department> getEleTree() {
         LambdaQueryWrapper<Department> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.orderByAsc(Department::getOrderNumber);
         queryWrapper.orderByDesc(Department::getId);
-        List<Department> list = manager.list(queryWrapper);
+        List<Department> list = departmentManager.list(queryWrapper);
         // 转化成EleTree格式
         List<EleTree<Department>> trees = convertDepartments(list);
         // 封装成树形
         return buildDepartmentTree(trees);
     }
 
-    @CacheEvict(cacheNames = "department_cache", allEntries = true, beforeInvocation = true)
     @Override
     public void update(Department department) {
         // 设置更新时间
         department.setUpdateTime(LocalDateTime.now());
-        boolean isSuccess = this.manager.updateById(department);
+        boolean isSuccess = this.departmentManager.updateById(department);
         if (!isSuccess) {
             ExceptionCast.cast(CommonCode.UPDATE_FAIL);
         }
     }
 
-    @CacheEvict(cacheNames = "department_cache", allEntries = true, beforeInvocation = true)
     @Override
     public void insert(Department department) {
         department.setId(null);
         department.setCreateTime(LocalDateTime.now());
-        boolean isSuccess = this.manager.save(department);
+        boolean isSuccess = this.departmentManager.save(department);
         if (!isSuccess) {
             ExceptionCast.cast(CommonCode.SAVE_FAIL);
         }
     }
 
-    @CacheEvict(cacheNames = "department_cache", allEntries = true, beforeInvocation = true)
     @Override
     public void multipleDelete(String ids) {
         List<String> idList = StringUtils.split(ids, StringPool.COMMA);
         // 删除部门
-        this.manager.removeByIds(idList);
+        this.departmentManager.removeByIds(idList);
         // 递归删除子部门
         this.delete(idList);
     }
@@ -177,24 +167,22 @@ public class DepartmentServiceImpl implements DepartmentService {
                 queryWrapper.like(Department::getName, department.getName());
             }
         }
-        IPage<Department> rolePage = manager.page(page, queryWrapper);
+        IPage<Department> rolePage = departmentManager.page(page, queryWrapper);
         // 转化成table需要格式
         return PageUtils.convertPageResponse(rolePage);
     }
 
-    @Cacheable(cacheNames = "department_cache", key = "'department_' + #id")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public Department getById(String id) {
-        return manager.getById(id);
+        return departmentManager.getById(id);
     }
 
-    @CacheEvict(cacheNames = "department_cache", allEntries = true, beforeInvocation = true)
     @Override
     public void updatePatch(Department bean) {
         // 设置更新时间
         bean.setUpdateTime(LocalDateTime.now());
-        boolean isSuccess = this.manager.updateById(bean);
+        boolean isSuccess = this.departmentManager.updateById(bean);
         if (!isSuccess) {
             ExceptionCast.cast(CommonCode.UPDATE_FAIL);
         }
@@ -204,11 +192,11 @@ public class DepartmentServiceImpl implements DepartmentService {
         LambdaQueryWrapper<Department> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.in(Department::getParentId, idList);
         // 查询所有子节点
-        List<Department> list = this.manager.list(queryWrapper);
+        List<Department> list = this.departmentManager.list(queryWrapper);
         if (CollectionUtils.isNotEmpty(list)) {
             List<String> childrenIdList = list.stream().map(Department::getId).collect(Collectors.toList());
             // 不为空则删除
-            this.manager.removeByIds(childrenIdList);
+            this.departmentManager.removeByIds(childrenIdList);
             // 递归操作
             this.delete(childrenIdList);
         }

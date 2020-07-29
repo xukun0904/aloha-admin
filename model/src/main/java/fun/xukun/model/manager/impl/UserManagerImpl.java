@@ -1,12 +1,12 @@
-package fun.xukun.platform.system.manager.impl;
+package fun.xukun.model.manager.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import fun.xukun.model.domain.system.User;
 import fun.xukun.model.domain.system.ext.UserExt;
 import fun.xukun.model.domain.system.request.UserQuery;
+import fun.xukun.model.manager.UserManager;
 import fun.xukun.model.mapper.system.UserMapper;
-import fun.xukun.platform.system.manager.UserManager;
 import org.springframework.stereotype.Service;
 
 /**

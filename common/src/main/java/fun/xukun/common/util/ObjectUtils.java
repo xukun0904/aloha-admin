@@ -1,5 +1,7 @@
 package fun.xukun.common.util;
 
+import org.springframework.beans.BeanUtils;
+
 /**
  * Created by IntelliJ IDEA.
  * 对象工具类
@@ -54,5 +56,15 @@ public class ObjectUtils {
      */
     public static Integer toInt(Object obj) {
         return toLong(obj).intValue();
+    }
+
+    /**
+     * 拷贝对象属性
+     *
+     * @param source 源对象
+     * @param target 目标对象
+     */
+    public static void copyProperties(Object source, Object target) {
+        BeanUtils.copyProperties(source, target);
     }
 }

@@ -1,4 +1,4 @@
-package fun.xukun.platform.system.manager;
+package fun.xukun.model.manager;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import fun.xukun.model.domain.system.Role;

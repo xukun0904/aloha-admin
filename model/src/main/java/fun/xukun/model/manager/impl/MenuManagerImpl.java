@@ -1,9 +1,9 @@
-package fun.xukun.platform.system.manager.impl;
+package fun.xukun.model.manager.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import fun.xukun.model.domain.system.Menu;
+import fun.xukun.model.manager.MenuManager;
 import fun.xukun.model.mapper.system.MenuMapper;
-import fun.xukun.platform.system.manager.MenuManager;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

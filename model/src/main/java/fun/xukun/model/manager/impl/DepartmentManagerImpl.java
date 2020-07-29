@@ -1,9 +1,9 @@
-package fun.xukun.platform.system.manager.impl;
+package fun.xukun.model.manager.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import fun.xukun.model.domain.system.Department;
+import fun.xukun.model.manager.DepartmentManager;
 import fun.xukun.model.mapper.system.DepartmentMapper;
-import fun.xukun.platform.system.manager.DepartmentManager;
 import org.springframework.stereotype.Service;
 
 /**

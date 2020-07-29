@@ -76,4 +76,13 @@ public interface UserService {
      * @param newPassword 新密码
      */
     void updatePassword(UserInfo currentUser, String oldPassword, String newPassword);
+
+    /**
+     * 校验用户名是否没被占用
+     *
+     * @param username 用户名
+     * @param id       用户主键
+     * @return 是否没被占用
+     */
+    boolean verify(String username, String id);
 }

@@ -133,10 +133,18 @@
         });
 
         form.on('submit(user-add-form-submit)', function (data) {
-            aloha.post(ctx + 'user', data.field, function () {
-                layer.closeAll();
-                aloha.alert.success('新增成功，初始密码为 12345678');
-                $('#aloha-user').find('#query').click();
+            aloha.get(ctx + 'user/verify', {username: data.field.username}, function (result) {
+                if (result.code === 200) {
+                    if (result.data) {
+                        aloha.post(ctx + 'user', data.field, function () {
+                            layer.closeAll();
+                            aloha.alert.success('新增成功，初始密码为 12345678');
+                            $('#aloha-user').find('#query').click();
+                            return false;
+                        });
+                    }
+                }
+                aloha.alert.error('用户名已被使用');
             });
             return false;
         });

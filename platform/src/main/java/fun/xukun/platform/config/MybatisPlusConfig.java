@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  */
 @EnableTransactionManagement
 @Configuration
-@MapperScan("fun.xukun.model")
+@MapperScan("fun.xukun.model.mapper")
 public class MybatisPlusConfig {
 
     /**
