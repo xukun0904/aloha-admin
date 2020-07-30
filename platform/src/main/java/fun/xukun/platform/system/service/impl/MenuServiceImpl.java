@@ -20,6 +20,9 @@ import fun.xukun.model.manager.MenuManager;
 import fun.xukun.model.manager.RoleMenuManager;
 import fun.xukun.platform.system.service.MenuService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +39,7 @@ import java.util.stream.Collectors;
  * @author xukun
  * @version 1.00
  */
+@CacheConfig(cacheNames = "system")
 @Service
 @RequiredArgsConstructor
 @Transactional(rollbackFor = Exception.class)
@@ -45,6 +49,7 @@ public class MenuServiceImpl implements MenuService {
 
     private final RoleMenuManager roleMenuManager;
 
+    @Cacheable(key = "'menu:trees:'+#userId", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<EleTree<Menu>> listMenuTreeByUserId(String userId) {
@@ -56,6 +61,7 @@ public class MenuServiceImpl implements MenuService {
         return getMenuTrees(menuTrees);
     }
 
+    @Cacheable(key = "'menu:trees'", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<EleTree<Menu>> listMenuTree() {
@@ -73,6 +79,7 @@ public class MenuServiceImpl implements MenuService {
         return menuManager.list(queryWrapper);
     }
 
+    @Cacheable(key = "'menu:tree'", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public EleTree<Menu> getMenuTree() {
@@ -83,6 +90,7 @@ public class MenuServiceImpl implements MenuService {
         return buildMenuTree(menuTrees);
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void update(Menu menu) {
         // 设置更新时间
@@ -93,6 +101,7 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void insert(Menu menu) {
         menu.setId(null);
@@ -103,6 +112,7 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void multipleDelete(String ids) {
         List<String> idList = StringUtils.split(ids, StringPool.COMMA);
@@ -137,6 +147,7 @@ public class MenuServiceImpl implements MenuService {
         return PageUtils.convertPageResponse(rolePage);
     }
 
+    @Cacheable(key = "'menu:'+#id", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public Menu getById(String id) {

@@ -66,5 +66,5 @@ public interface Constants {
     /**
      * 验证码key前缀
      */
-    String LOGIN_CAPTCHA_PREFIX = "aloha_login_captcha_";
+    String LOGIN_CAPTCHA_PREFIX = "aloha:captcha:";
 }

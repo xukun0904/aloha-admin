@@ -9,8 +9,11 @@ server:
   # 服务端口
   port: ${APP_PORT:8091}
 aloha:
-  # 缓存过期时间，单位小时
-  cache-expire: 5
+  cache:
+    # 缓存过期时间，单位小时
+    expire: 5
+    # 前缀
+    prefix: aloha
   security:
     # 拦截忽略路径
     ignore_urls: /aloha/**,/layui/**,/auth/**,/login,/swagger-ui.html,/swagger-resources/**,/webjars/**,/*/api-docs

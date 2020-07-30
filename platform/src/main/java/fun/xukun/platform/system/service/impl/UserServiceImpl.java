@@ -24,6 +24,9 @@ import fun.xukun.platform.security.model.UserInfo;
 import fun.xukun.platform.system.service.RoleService;
 import fun.xukun.platform.system.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -41,6 +44,7 @@ import java.util.stream.Collectors;
  * @author xukun
  * @version 1.00
  */
+@CacheConfig(cacheNames = "system")
 @Service
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
@@ -54,6 +58,7 @@ public class UserServiceImpl implements UserService {
 
     private final RoleService roleService;
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void update(UserExt bean) {
         // 设置更新时间
@@ -69,6 +74,7 @@ public class UserServiceImpl implements UserService {
         saveUserRoles(bean, bean.getRoleIds());
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void insert(UserExt bean) {
         bean.setId(null);
@@ -93,6 +99,7 @@ public class UserServiceImpl implements UserService {
         this.userRoleManager.saveBatch(userRoles);
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void multipleDelete(String ids) {
         List<String> idList = StringUtils.split(ids, StringPool.COMMA);
@@ -113,6 +120,7 @@ public class UserServiceImpl implements UserService {
         return PageUtils.convertPageResponse(userPage);
     }
 
+    @Cacheable(key = "'user:'+#id", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public UserExt getById(String id) {
@@ -131,6 +139,7 @@ public class UserServiceImpl implements UserService {
         return userExt;
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void updatePatch(User bean) {
         // 设置更新时间
@@ -141,6 +150,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Cacheable(key = "'user:'+#username", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public UserExt getByUsername(String username) {
@@ -148,6 +158,7 @@ public class UserServiceImpl implements UserService {
         return obtainUserExt(userExt);
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void updatePassword(UserInfo currentUser, String oldPassword, String newPassword) {
         if (!passwordEncoder.matches(oldPassword, currentUser.getPassword())) {
@@ -160,6 +171,7 @@ public class UserServiceImpl implements UserService {
         this.userManager.getBaseMapper().update(user, wrapper);
     }
 
+    @Cacheable(key = "'user:verify:'+#username+'_'+#id", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public boolean verify(String username, String id) {

@@ -1,5 +1,6 @@
 package fun.xukun.platform.config;
 
+import fun.xukun.common.model.constant.StringPool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -32,6 +33,7 @@ public class CacheConfig {
      */
     @Bean
     public CacheManager cacheManager(RedisTemplate<Object, Object> redisTemplate) {
+        CacheProperties cache = properties.getCache();
         // 基本配置
         RedisCacheConfiguration defaultCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
         // 设置key为String
@@ -41,7 +43,9 @@ public class CacheConfig {
         // 不缓存null
         .disableCachingNullValues()
         // 缓存数据过期时间
-        .entryTtl(Duration.ofHours(properties.getCacheExpire()));
+        .entryTtl(Duration.ofHours(cache.getExpire()))
+        // 设置缓存前缀
+        .computePrefixWith(cacheName -> cache.getPrefix() + StringPool.COLON + cacheName + StringPool.COLON);
         // redis缓存管理器
         return RedisCacheManager.RedisCacheManagerBuilder
         // Redis 连接工厂

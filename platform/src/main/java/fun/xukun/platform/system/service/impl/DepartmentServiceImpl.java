@@ -18,6 +18,9 @@ import fun.xukun.model.domain.system.Department;
 import fun.xukun.model.manager.DepartmentManager;
 import fun.xukun.platform.system.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +37,7 @@ import java.util.stream.Collectors;
  * @author xukun
  * @version 1.00
  */
+@CacheConfig(cacheNames = "system")
 @Service
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
@@ -41,6 +45,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentManager departmentManager;
 
+    @Cacheable(key = "'dept:trees'", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<EleTree<Department>> listEleTree() {
@@ -59,6 +64,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         return departmentManager.list(queryWrapper);
     }
 
+    @Cacheable(key = "'dept:strees'", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<SelectTree<Department>> listSelectTree() {
@@ -109,6 +115,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         return trees;
     }
 
+    @Cacheable(key = "'dept:tree'", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public EleTree<Department> getEleTree() {
@@ -122,6 +129,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         return buildDepartmentTree(trees);
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void update(Department department) {
         // 设置更新时间
@@ -132,6 +140,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void insert(Department department) {
         department.setId(null);
@@ -142,6 +151,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void multipleDelete(String ids) {
         List<String> idList = StringUtils.split(ids, StringPool.COMMA);
@@ -172,12 +182,14 @@ public class DepartmentServiceImpl implements DepartmentService {
         return PageUtils.convertPageResponse(rolePage);
     }
 
+    @Cacheable(key = "'dept:'+#id", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public Department getById(String id) {
         return departmentManager.getById(id);
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void updatePatch(Department bean) {
         // 设置更新时间

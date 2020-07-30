@@ -22,6 +22,9 @@ import fun.xukun.model.manager.RoleMenuManager;
 import fun.xukun.model.manager.UserRoleManager;
 import fun.xukun.platform.system.service.RoleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 /**
  * 日期:2020/6/9
@@ -41,6 +45,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "system")
 public class RoleServiceImpl implements RoleService {
 
     private final RoleManager roleManager;
@@ -82,6 +87,7 @@ public class RoleServiceImpl implements RoleService {
         return PageUtils.convertPageResponse(roleExtPage);
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void update(RoleExt role) {
         role.setUpdateTime(LocalDateTime.now());
@@ -97,6 +103,7 @@ public class RoleServiceImpl implements RoleService {
         insertRoleMenus(role.getId(), role.getMenuIds());
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void insert(RoleExt role) {
         role.setId(null);
@@ -109,6 +116,7 @@ public class RoleServiceImpl implements RoleService {
         insertRoleMenus(role.getId(), role.getMenuIds());
     }
 
+    @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
     public void multipleDelete(String ids) {
         List<String> idList = StringUtils.split(ids, StringPool.COMMA);
@@ -126,12 +134,14 @@ public class RoleServiceImpl implements RoleService {
         userRoleManager.remove(userWrapper);
     }
 
+    @Cacheable(key = "'role:list'", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<Role> listRoles() {
         return this.roleManager.list();
     }
 
+    @Cacheable(key = "'role:perms:'+#roleIds", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<String> listPermissionByRoleIds(String roleIds) {
@@ -151,6 +161,7 @@ public class RoleServiceImpl implements RoleService {
         this.roleMenuManager.saveBatch(roleMenus);
     }
 
+    @Cacheable(key = "'role:list:'+#userId", unless = "#result == null")
     @Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
     @Override
     public List<Role> listByUserId(String userId) {

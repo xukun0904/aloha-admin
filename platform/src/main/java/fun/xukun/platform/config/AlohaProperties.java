@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "aloha")
 public class AlohaProperties {
+
     /**
      * 验证码配置
      */
@@ -33,9 +34,9 @@ public class AlohaProperties {
     private JwtProperties jwt;
 
     /**
-     * Spring Cache缓存时间（单位小时）
+     * 缓存配置
      */
-    private long cacheExpire;
+    private CacheProperties cache;
 
     public AlohaProperties() {
         captcha = new CaptchaProperties();
