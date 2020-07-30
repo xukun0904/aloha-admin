@@ -46,7 +46,7 @@
     </select>
 
     <select id="getByUsername" resultType="fun.xukun.model.domain.system.ext.UserExt">
-        SELECT u.*, d.name AS departmentName AS roleIds FROM user u
+        SELECT u.*, d.name AS departmentName FROM user u
         LEFT JOIN department d ON d.id = u.department_id
         WHERE u.username = #{username}
         GROUP BY u.id
