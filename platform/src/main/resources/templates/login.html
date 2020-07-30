@@ -123,7 +123,6 @@
             if (loading.is(":visible")) return;
             loading.show();
             $.post(ctx + 'auth/login', data.field, function (r) {
-                console.log(r);
                 if (r.code === 200) {
                     location.href = ctx + 'index';
                 } else {
