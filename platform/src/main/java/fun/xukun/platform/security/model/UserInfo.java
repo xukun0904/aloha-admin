@@ -63,11 +63,6 @@ public class UserInfo implements UserDetails {
      */
     private Collection<? extends GrantedAuthority> authorities;
 
-    /**
-     * 角色主键
-     */
-    private String roleIds;
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;

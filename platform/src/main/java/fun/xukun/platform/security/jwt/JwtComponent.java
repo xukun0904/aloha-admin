@@ -3,6 +3,7 @@ package fun.xukun.platform.security.jwt;
 import fun.xukun.common.model.constant.JwtConstants;
 import fun.xukun.common.model.constant.StringPool;
 import fun.xukun.common.util.ObjectUtils;
+import fun.xukun.model.domain.system.Role;
 import fun.xukun.platform.config.AlohaProperties;
 import fun.xukun.platform.security.model.UserInfo;
 import fun.xukun.platform.system.service.RoleService;
@@ -50,8 +51,8 @@ public class JwtComponent {
         .claim(JwtConstants.JWT_KEY_PASSWORD, userInfo.getPassword()).claim(JwtConstants.JWT_KEY_IS_TAB, userInfo.getIsTab())
         .claim(JwtConstants.JWT_KEY_THEME, userInfo.getTheme()).claim(JwtConstants.JWT_KEY_NICK_NAME, userInfo.getNickName())
         .claim(JwtConstants.JWT_KEY_STATUS, userInfo.getStatus()).claim(JwtConstants.JWT_KEY_AUTHORITIES, permissions)
-        .claim(JwtConstants.JWT_KEY_ROLE_IDS, userInfo.getRoleIds()).setExpiration(Date.from(LocalDateTime.now()
-        .plusMinutes(properties.getJwt().getExpire()).atZone(ZoneId.systemDefault()).toInstant())).signWith(SignatureAlgorithm.HS512, properties.getJwt().getSecret()).compact();
+        .setExpiration(Date.from(LocalDateTime.now().plusMinutes(properties.getJwt().getExpire()).atZone(ZoneId.systemDefault())
+        .toInstant())).signWith(SignatureAlgorithm.HS512, properties.getJwt().getSecret()).compact();
     }
 
 
@@ -97,12 +98,14 @@ public class JwtComponent {
         Jws<Claims> claimsJws = parserToken(token);
         Claims body = claimsJws.getBody();
         // 实时获取权限
-        String roleIds = ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_ROLE_IDS));
+        String id = ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_ID));
+        List<Role> roles = roleService.listByUserId(id);
+        String roleIds = roles.stream().map(Role::getId).collect(Collectors.joining(StringPool.COMMA));
         List<String> permissions = roleService.listPermissionByRoleIds(roleIds);
         Collection<? extends GrantedAuthority> authorities = permissions.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-        return new UserInfo(ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_ID)), ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_USERNAME)),
+        return new UserInfo(id, ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_USERNAME)),
         ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_PASSWORD)), ObjectUtils.toInt(body.get(JwtConstants.JWT_KEY_IS_TAB)),
         ObjectUtils.toInt(body.get(JwtConstants.JWT_KEY_THEME)), ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_NICK_NAME)),
-        ObjectUtils.toInt(body.get(JwtConstants.JWT_KEY_STATUS)), authorities, roleIds);
+        ObjectUtils.toInt(body.get(JwtConstants.JWT_KEY_STATUS)), authorities);
     }
 }

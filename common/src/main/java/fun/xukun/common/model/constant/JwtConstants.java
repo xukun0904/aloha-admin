@@ -17,5 +17,4 @@ public interface JwtConstants {
     String JWT_KEY_IS_TAB = "isTab";
     String JWT_KEY_THEME = "theme";
     String JWT_KEY_AUTHORITIES = "authorities";
-    String JWT_KEY_ROLE_IDS = "roleIds";
 }

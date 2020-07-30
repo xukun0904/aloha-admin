@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
             throw new LockedException(AuthCode.USER_LOCKED.message());
         }
         List<GrantedAuthority> authorities = getAuthority(userExt.getRoleIds());
-        return new UserInfo(userExt.getId(), userExt.getUsername(), userExt.getPassword(), userExt.getIsTab(), userExt.getTheme(), userExt.getNickName(), userExt.getStatus(), authorities, userExt.getRoleIds());
+        return new UserInfo(userExt.getId(), userExt.getUsername(), userExt.getPassword(), userExt.getIsTab(), userExt.getTheme(), userExt.getNickName(), userExt.getStatus(), authorities);
     }
 
     private List<GrantedAuthority> getAuthority(String roleIds) {
