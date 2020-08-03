@@ -1,6 +1,6 @@
-package fun.xukun.model.mapper.system;
+package fun.xukun.model.mapper.tool;
 
-import fun.xukun.model.domain.system.FileInfo;
+import fun.xukun.model.domain.tool.FileInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

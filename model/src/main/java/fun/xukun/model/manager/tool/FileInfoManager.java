@@ -1,6 +1,6 @@
-package fun.xukun.model.manager.system;
+package fun.xukun.model.manager.tool;
 
-import fun.xukun.model.domain.system.FileInfo;
+import fun.xukun.model.domain.tool.FileInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

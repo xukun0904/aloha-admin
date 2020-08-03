@@ -1,8 +1,8 @@
-package fun.xukun.model.manager.system.impl;
+package fun.xukun.model.manager.tool.impl;
 
-import fun.xukun.model.domain.system.FileInfo;
-import fun.xukun.model.mapper.system.FileInfoMapper;
-import fun.xukun.model.manager.system.FileInfoManager;
+import fun.xukun.model.domain.tool.FileInfo;
+import fun.xukun.model.mapper.tool.FileInfoMapper;
+import fun.xukun.model.manager.tool.FileInfoManager;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
