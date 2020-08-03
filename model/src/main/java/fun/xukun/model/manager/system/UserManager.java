@@ -1,4 +1,4 @@
-package fun.xukun.model.manager;
+package fun.xukun.model.manager.system;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -12,10 +12,9 @@ import fun.xukun.model.domain.system.request.UserQuery;
  * </p>
  *
  * @author xukun
- * @since 2020-06-22
+ * @since 2020-08-03
  */
 public interface UserManager extends IService<User> {
-
     /**
      * 分页查询
      *

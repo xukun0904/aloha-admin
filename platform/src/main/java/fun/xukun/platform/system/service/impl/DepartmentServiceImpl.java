@@ -15,7 +15,7 @@ import fun.xukun.common.util.CollectionUtils;
 import fun.xukun.common.util.PageUtils;
 import fun.xukun.common.util.StringUtils;
 import fun.xukun.model.domain.system.Department;
-import fun.xukun.model.manager.DepartmentManager;
+import fun.xukun.model.manager.system.DepartmentManager;
 import fun.xukun.platform.system.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheConfig;

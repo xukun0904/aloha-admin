@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
  * </p>
  *
  * @author xukun
- * @since 2020-06-22
+ * @since 2020-08-03
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -71,6 +71,10 @@ public class User implements Serializable {
     @ApiModelProperty(value = "主题 0黑 1白")
     @TableField("theme")
     private Integer theme;
+
+    @ApiModelProperty(value = "头像")
+    @TableField("avatar_id")
+    private String avatarId;
 
     @ApiModelProperty(value = "描述")
     @TableField("description")

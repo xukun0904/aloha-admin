@@ -15,6 +15,7 @@
         <result column="status" property="status" />
         <result column="is_tab" property="isTab" />
         <result column="theme" property="theme" />
+        <result column="avatar_id" property="avatarId" />
         <result column="description" property="description" />
         <result column="create_time" property="createTime" />
         <result column="update_time" property="updateTime" />

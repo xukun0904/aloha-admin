@@ -1,11 +1,11 @@
-package fun.xukun.model.manager.impl;
+package fun.xukun.model.manager.system.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import fun.xukun.model.domain.system.User;
 import fun.xukun.model.domain.system.ext.UserExt;
 import fun.xukun.model.domain.system.request.UserQuery;
-import fun.xukun.model.manager.UserManager;
+import fun.xukun.model.manager.system.UserManager;
 import fun.xukun.model.mapper.system.UserMapper;
 import org.springframework.stereotype.Service;
 
@@ -15,13 +15,13 @@ import org.springframework.stereotype.Service;
  * </p>
  *
  * @author xukun
- * @since 2020-06-22
+ * @since 2020-08-03
  */
 @Service
 public class UserManagerImpl extends ServiceImpl<UserMapper, User> implements UserManager {
 
     @Override
-    public IPage<UserExt> listUsers(IPage<User> page,UserQuery query) {
+    public IPage<UserExt> listUsers(IPage<User> page, UserQuery query) {
         return this.baseMapper.listUsers(page, query);
     }
 
