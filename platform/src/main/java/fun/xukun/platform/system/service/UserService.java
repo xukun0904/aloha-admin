@@ -85,4 +85,11 @@ public interface UserService {
      * @return 是否没被占用
      */
     boolean verify(String username, String id);
+
+    /**
+     * 更新用户侧边栏风格及选项卡开关
+     *
+     * @param bean 实体类
+     */
+    void updateSettings(User bean);
 }

@@ -3,7 +3,11 @@ package fun.xukun.platform.common.web;
 import fun.xukun.common.model.constant.StringPool;
 import fun.xukun.common.model.response.ResponseResult;
 import fun.xukun.common.model.response.ResponseResultBuilder;
+import fun.xukun.model.domain.system.ext.UserExt;
 import fun.xukun.platform.security.model.UserInfo;
+import fun.xukun.platform.system.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -23,7 +27,11 @@ import java.util.stream.Collectors;
  */
 @ApiIgnore
 @Controller
+@RequiredArgsConstructor
 public class IndexController {
+    @Autowired
+    private UserService userService;
+
     @GetMapping("/")
     public String redirectIndex() {
         return "redirect:/index";
@@ -33,7 +41,8 @@ public class IndexController {
     public String index(Model model) {
         // 获取当前登录人信息
         UserInfo userInfo = (UserInfo) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        model.addAttribute("user", userInfo);
+        UserExt user = userService.getById(userInfo.getId());
+        model.addAttribute("user", user);
         // 获取权限信息
         Collection<? extends GrantedAuthority> authorities = userInfo.getAuthorities();
         String permissions = authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(StringPool.COMMA));

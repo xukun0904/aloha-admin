@@ -1,12 +1,16 @@
 package fun.xukun.platform.system.web;
 
 import fun.xukun.common.model.constant.Constants;
+import fun.xukun.common.web.BaseController;
 import fun.xukun.model.domain.system.Department;
 import fun.xukun.model.domain.system.Menu;
 import fun.xukun.model.domain.system.ext.UserExt;
+import fun.xukun.platform.security.model.UserInfo;
+import fun.xukun.platform.security.service.AuthService;
 import fun.xukun.platform.system.service.DepartmentService;
 import fun.xukun.platform.system.service.MenuService;
 import fun.xukun.platform.system.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +28,8 @@ import springfox.documentation.annotations.ApiIgnore;
 @ApiIgnore
 @Controller
 @RequestMapping(Constants.VIEW_PREFIX)
-public class SystemPageController {
+@RequiredArgsConstructor
+public class SystemPageController extends BaseController {
 
     private final MenuService menuService;
 
@@ -32,11 +37,7 @@ public class SystemPageController {
 
     private final UserService userService;
 
-    public SystemPageController(MenuService menuService, DepartmentService departmentService, UserService userService) {
-        this.menuService = menuService;
-        this.departmentService = departmentService;
-        this.userService = userService;
-    }
+    private final AuthService authService;
 
     @GetMapping("menu/manage")
     public String menuManagePage() {
@@ -106,5 +107,13 @@ public class SystemPageController {
     @GetMapping("password/update")
     public String passwordUpdatePage() {
         return "system/user/password_update";
+    }
+
+    @GetMapping("user/profile")
+    public String userProfilePage(Model model) {
+        UserInfo userInfo = authService.getCurrentUserInfo(request);
+        UserExt bean = userService.getById(userInfo.getId());
+        model.addAttribute("bean", bean);
+        return "system/user/profile";
     }
 }

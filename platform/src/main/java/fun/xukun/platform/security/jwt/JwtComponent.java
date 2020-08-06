@@ -45,12 +45,8 @@ public class JwtComponent {
      * @param userInfo 载荷中的数据
      */
     public String generateToken(UserInfo userInfo) {
-        Collection<? extends GrantedAuthority> authorities = userInfo.getAuthorities();
-        String permissions = authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(StringPool.COMMA));
         return Jwts.builder().claim(JwtConstants.JWT_KEY_ID, userInfo.getId()).claim(JwtConstants.JWT_KEY_USERNAME, userInfo.getUsername())
-        .claim(JwtConstants.JWT_KEY_PASSWORD, userInfo.getPassword()).claim(JwtConstants.JWT_KEY_IS_TAB, userInfo.getIsTab())
-        .claim(JwtConstants.JWT_KEY_THEME, userInfo.getTheme()).claim(JwtConstants.JWT_KEY_NICK_NAME, userInfo.getNickName())
-        .claim(JwtConstants.JWT_KEY_STATUS, userInfo.getStatus()).claim(JwtConstants.JWT_KEY_AUTHORITIES, permissions)
+        .claim(JwtConstants.JWT_KEY_PASSWORD, userInfo.getPassword()).claim(JwtConstants.JWT_KEY_STATUS, userInfo.getStatus())
         .setExpiration(Date.from(LocalDateTime.now().plusMinutes(properties.getJwt().getExpire()).atZone(ZoneId.systemDefault())
         .toInstant())).signWith(SignatureAlgorithm.HS512, properties.getJwt().getSecret()).compact();
     }
@@ -103,9 +99,7 @@ public class JwtComponent {
         String roleIds = roles.stream().map(Role::getId).collect(Collectors.joining(StringPool.COMMA));
         List<String> permissions = roleService.listPermissionByRoleIds(roleIds);
         Collection<? extends GrantedAuthority> authorities = permissions.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-        return new UserInfo(id, ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_USERNAME)),
-        ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_PASSWORD)), ObjectUtils.toInt(body.get(JwtConstants.JWT_KEY_IS_TAB)),
-        ObjectUtils.toInt(body.get(JwtConstants.JWT_KEY_THEME)), ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_NICK_NAME)),
-        ObjectUtils.toInt(body.get(JwtConstants.JWT_KEY_STATUS)), authorities);
+        return new UserInfo(id, ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_USERNAME)), ObjectUtils.toString(body.get(JwtConstants.JWT_KEY_PASSWORD)),
+                ObjectUtils.toInt(body.get(JwtConstants.JWT_KEY_STATUS)), authorities);
     }
 }

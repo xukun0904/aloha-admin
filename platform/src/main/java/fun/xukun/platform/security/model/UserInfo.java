@@ -39,21 +39,6 @@ public class UserInfo implements UserDetails {
     private String password;
 
     /**
-     * 是否开启tab页
-     */
-    private Integer isTab;
-
-    /**
-     * 主题颜色
-     */
-    private Integer theme;
-
-    /**
-     * 昵称
-     */
-    private String nickName;
-
-    /**
      * 用户状态
      */
     private Integer status;

@@ -180,4 +180,19 @@ public class UserServiceImpl implements UserService {
         wrapper.ne(StringUtils.isNotBlank(id), User::getId, id);
         return this.userManager.count(wrapper) <= 0;
     }
+
+    @CacheEvict(allEntries = true, beforeInvocation = true)
+    @Override
+    public void updateSettings(User bean) {
+        User record = new User();
+        record.setId(bean.getId());
+        record.setTheme(bean.getTheme());
+        record.setIsTab(bean.getIsTab());
+        // 设置更新时间
+        record.setUpdateTime(LocalDateTime.now());
+        boolean isSuccess = this.userManager.updateById(record);
+        if (!isSuccess) {
+            ExceptionCast.cast(CommonCode.UPDATE_FAIL);
+        }
+    }
 }

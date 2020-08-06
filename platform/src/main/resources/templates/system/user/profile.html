@@ -1,0 +1,177 @@
+<style>
+    #aloha-user-profile #user-profile, #aloha-user-profile .user-profile-card {
+        display: inline-block;
+    }
+
+    #aloha-user-profile #user-img, #aloha-user-profile #user-info {
+        display: inline-block;
+        float: left;
+    }
+
+    #aloha-user-profile #user-img img {
+        width: 7rem;
+        margin: 1rem;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    #aloha-user-profile #user-info {
+        margin: .95rem 0 .95rem 1.2rem;
+    }
+
+    #aloha-user-profile #user-info div {
+        margin: 3px 0;
+        max-width: 22rem;
+    }
+
+    #aloha-user-profile #options-wrapper {
+        text-align: center;
+        margin-top: .5rem;
+    }
+
+    #aloha-user-profile #update-user-info {
+        cursor: pointer;
+        margin-left: -1rem;
+    }
+
+    #aloha-user-profile #options-wrapper a {
+        padding: 4px 6px;
+        color: rgba(0, 0, 0, 0.65);
+        border: 1px solid #d9d9d9;
+        border-radius: 2px;
+    }
+
+    #aloha-user-profile #options-wrapper a:hover {
+        color: #40a9ff;
+        border-color: #40a9ff;
+    }
+
+    #aloha-user-profile .layui-form-item {
+        margin-bottom: 0;
+    }
+</style>
+<div class="layui-fluid layui-anim aloha-anim" id="aloha-user-profile" lay-title="个人中心">
+    <div class="layui-row layui-col-space8 aloha-container">
+        <div class="layui-col-md6 layui-col-sm6 layui-col-xs12">
+            <div class="layui-card">
+                <div class="layui-card-header">个人信息</div>
+                <div class="layui-card-body user-profile-card">
+                    <div id="user-profile">
+                        <div id="user-img">
+                            <img alt="头像" title="点我更换头像" data-th-src="@{aloha/images/avatar/default.jpg}">
+                            <div id="options-wrapper">
+                                <div id="update-user-info">
+                                    <a><span class="layui-icon layui-icon-setting"></span>编辑资料</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="user-info">
+                            <div><span class="layui-icon layui-icon-user"></span>账号：<span data-th-text="${bean?.nickName}"></span></div>
+                            <div><span class="layui-icon layui-icon-trophy"></span>角色：<span data-th-text="${bean?.roleNames}"></span></div>
+                            <div><span class="layui-icon layui-icon-home"></span>部门：<span data-th-text="${bean?.departmentName}"></span></div>
+                            <div><span class="layui-icon layui-icon-skin"></span>性别：<span data-th-text="${bean?.sex == 0 ? '男' : '女'}"></span></div>
+                            <div><span class="layui-icon layui-icon-phone"></span>电话：<span data-th-text="${bean?.phone}"></span></div>
+                            <div><span class="layui-icon layui-icon-mail"></span> 邮箱：<span data-th-text="${bean?.email}"></span></div>
+                            <div><span class="layui-icon layui-icon-read"></span> 简介：<span data-th-text="${bean?.description}"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md6 layui-col-sm6 layui-col-xs12">
+            <div class="layui-card">
+                <div class="layui-card-header">系统配置</div>
+                <div class="layui-card-body">
+                    <form class="layui-form" action="" lay-filter="system-setting-form">
+                        <div class="layui-form-item aloha-hide">
+                            <label class="layui-form-label aloha-form-item-require">id：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="id" class="layui-input" data-th-value="${bean?.id}">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label" style="width: 85px">侧边栏风格：</label>
+                            <div class="layui-input-block">
+                                <input type="radio" name="theme" lay-filter="theme" value="0" checked title="深邃">
+                                <input type="radio" name="theme" lay-filter="theme" value="1" title="明亮">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label" style="width: 85px">选项卡开关：</label>
+                            <div class="layui-input-block">
+                                <input type="radio" name="isTab" lay-filter="tab" value="1" checked title="开启">
+                                <input type="radio" name="isTab" lay-filter="tab" value="0" title="关闭">
+                            </div>
+                        </div>
+                        <button class="aloha-hide" lay-submit="" lay-filter="system-setting-form-submit" id="submit-form"></button>
+                    </form>
+                </div>
+                <div class="layui-card-footer">
+                    <button class="layui-btn" id="submit">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script data-th-inline="none" type="text/javascript">
+    layui.use(['jquery', 'form', 'aloha'], function () {
+        let $ = layui.jquery,
+            aloha = layui.aloha,
+            form = layui.form,
+            userData = {theme: currentUser.theme, isTab: currentUser.isTab},
+            $view = $('#aloha-user-profile');
+
+        form.render();
+
+        initSettings();
+
+        $view.on('click', '#update-user-info', function () {
+            aloha.modal.view('个人信息修改', 'user/update', {
+                area: $(window).width() <= 750 ? '90%' : '50%',
+                btn: ['确定'],
+                yes: function () {
+                    $('#profile-update').find('#submit').trigger('click');
+                }
+            });
+        });
+
+        $view.on('click', '#user-profile img', function () {
+            aloha.modal.view('点击更换', 'user/avatar', {
+                area: $(window).width() <= 750 ? '90%' : '650px',
+                offset: '100px'
+            });
+        });
+
+        $view.on('click', '#submit', function () {
+            $view.find('#submit-form').trigger('click');
+        });
+
+        function initSettings() {
+            form.val("system-setting-form", userData);
+        }
+
+        form.on("radio(theme)", function (data) {
+            const $sidebar = $('#app-sidebar');
+            if (data.value === 'black') {
+                $sidebar.removeClass('aloha-theme-white');
+            }
+            if (data.value === 'white') {
+                $sidebar.addClass('aloha-theme-white');
+            }
+        });
+
+        form.on('submit(system-setting-form-submit)', function (data) {
+            if (aloha.nativeEqual(data.field, userData)) {
+                aloha.alert.warn('数据未作任何修改');
+                return false;
+            }
+            aloha.patch(ctx + 'user/settings', data.field, function () {
+                userData = data.field;
+                aloha.modal.confirm('修改成功', '是否马上刷新页面生效？', function () {
+                    window.location.reload();
+                });
+            });
+            return false;
+        });
+    })
+</script>

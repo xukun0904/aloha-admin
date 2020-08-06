@@ -84,7 +84,14 @@ public class UserController extends BaseController {
     @GetMapping("verify")
     @ApiOperation(value = "校验用户名是否没被占用", notes = "校验用户名是否没被占用,支持GET方式", response = ResponseResult.class)
     public ResponseResult<Boolean> verify(String username, String id) {
-        boolean isOccupy = this.service.verify(username,id);
+        boolean isOccupy = this.service.verify(username, id);
         return ResponseResultBuilder.builder().success(isOccupy);
+    }
+
+    @ApiOperation(value = "更新用户侧边栏风格及选项卡开关", notes = "更新当前用户侧边栏风格及选项卡开关,支持PATCH方式", response = ResponseResult.class)
+    @PatchMapping("settings")
+    public ResponseResult<Void> updateSettings(User bean) {
+        this.service.updateSettings(bean);
+        return ResponseResultBuilder.builder().success();
     }
 }

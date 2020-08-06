@@ -12,11 +12,11 @@
             <ul class="layui-nav layui-layout-right" lay-filter="aloha-header">
                 <li class="layui-nav-item layui-user" lay-unselect>
                     <a>
-                        <img style="width: 1.9rem;margin-right:.5rem;border-radius: 50%" src="{{= ctx + 'aloha/images/avatar/20180414165754.jpg'}}" title="头像">
+                        <img style="width: 1.9rem;margin-right:.5rem;border-radius: 50%" src="{{= ctx + 'aloha/images/avatar/default.jpg'}}" title="头像">
                         {{ currentUser.nickName }}
                     </a>
                     <dl class="layui-nav-child">
-                        <!--<dd><a class="layui-nav-child-href" id="user-profile">个人中心</a></dd>-->
+                        <dd><a class="layui-nav-child-href" id="user-profile">个人中心</a></dd>
                         <dd><a class="layui-nav-child-href" id="password-update">密码修改</a></dd>
                         <dd class="aloha-hide"><a class="layui-nav-child-href" id="reload-layout-menu">刷新菜单</a></dd>
                         <hr/>
