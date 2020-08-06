@@ -139,7 +139,7 @@ public class UserServiceImpl implements UserService {
         return userExt;
     }
 
-    @CacheEvict(allEntries = true, beforeInvocation = true)
+    @CacheEvict(cacheNames = "system:user", allEntries = true, beforeInvocation = true)
     @Override
     public void updatePatch(User bean) {
         // 设置更新时间
@@ -181,7 +181,7 @@ public class UserServiceImpl implements UserService {
         return this.userManager.count(wrapper) <= 0;
     }
 
-    @CacheEvict(allEntries = true, beforeInvocation = true)
+    @CacheEvict(cacheNames = "system:user", allEntries = true, beforeInvocation = true)
     @Override
     public void updateSettings(User bean) {
         User record = new User();
