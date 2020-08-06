@@ -10,9 +10,14 @@
                 <span class="aloha-breadcrumb"></span>
             </ul>
             <ul class="layui-nav layui-layout-right" lay-filter="aloha-header">
+                <li class="layui-nav-item layui-hide-xs" id="fullscreen" lay-unselect>
+                    <a title="切换全屏">
+                        <i class="layui-icon layui-icon-screen-full"></i>
+                    </a>
+                </li>
                 <li class="layui-nav-item layui-user" lay-unselect>
                     <a>
-                        <img style="width: 1.9rem;margin-right:.5rem;border-radius: 50%" src="{{= ctx + 'aloha/images/avatar/default.jpg'}}" title="头像">
+                        <img style="width: 1.9rem;margin-right:.5rem;border-radius: 50%" src="{{= currentUser.avatarId ? ctx + 'file/'+currentUser.avatarId : ctx + 'aloha/images/avatar/default.jpg'}}" title="头像">
                         {{ currentUser.nickName }}
                     </a>
                     <dl class="layui-nav-child">
@@ -70,8 +75,6 @@
             aloha = layui.aloha;
 
         initTheme();
-
-        $view.find('#user-avatar').attr('src', ctx + "aloha/images/avatar/" + currentUser.avatar);
 
         $view.on('click', '.layui-logo', function () {
             aloha.navigate("/index");

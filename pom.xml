@@ -37,6 +37,7 @@
         <guava.version>29.0-jre</guava.version>
         <easy-captcha.version>1.6.2</easy-captcha.version>
         <jjwt.version>0.9.1</jjwt.version>
+        <tika.version>1.14</tika.version>
     </properties>
 
     <dependencyManagement>
@@ -124,6 +125,12 @@
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt</artifactId>
                 <version>${jjwt.version}</version>
+            </dependency>
+            <!-- tika -->
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-core</artifactId>
+                <version>${tika.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

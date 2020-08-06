@@ -50,9 +50,9 @@ public class CodeGenerator {
     private static final String PARENT_PACKAGE_NAME = "fun.xukun.model";
 
     /**
-     * 模块名
+     * 模块名("system")
      */
-    private static final String MODULE = "system";
+    private static final String MODULE = "tool";
 
     /**
      * 实体类包名
@@ -92,8 +92,8 @@ public class CodeGenerator {
     // private static final String TABLE_PREFIX = "b_";
 
     public static void main(String[] args) {
-        // "menu","role","role_menu","department","user"
-        executeCodeGenerator("user_role");
+        // "menu","role","role_menu","department","user","user_role"
+        executeCodeGenerator("file_info");
     }
 
     /**

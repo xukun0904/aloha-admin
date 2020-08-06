@@ -16,6 +16,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 日期:2020/6/22
@@ -92,6 +93,13 @@ public class UserController extends BaseController {
     @PatchMapping("settings")
     public ResponseResult<Void> updateSettings(User bean) {
         this.service.updateSettings(bean);
+        return ResponseResultBuilder.builder().success();
+    }
+
+    @ApiOperation(value = "更新用户头像", notes = "更新用户头像,支持PATCH方式", response = ResponseResult.class)
+    @PatchMapping("avatar")
+    public ResponseResult<Void> updateAvatar(User bean, MultipartFile file) {
+        this.service.updateAvatar(bean, file);
         return ResponseResultBuilder.builder().success();
     }
 }

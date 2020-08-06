@@ -18,11 +18,13 @@ import fun.xukun.model.domain.system.UserRole;
 import fun.xukun.model.domain.system.ext.UserExt;
 import fun.xukun.model.domain.system.request.UserQuery;
 import fun.xukun.model.domain.system.response.AuthCode;
+import fun.xukun.model.domain.tool.FileInfo;
 import fun.xukun.model.manager.system.UserManager;
 import fun.xukun.model.manager.system.UserRoleManager;
 import fun.xukun.platform.security.model.UserInfo;
 import fun.xukun.platform.system.service.RoleService;
 import fun.xukun.platform.system.service.UserService;
+import fun.xukun.platform.tool.service.FileInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -31,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -57,6 +60,8 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final RoleService roleService;
+
+    private final FileInfoService fileInfoService;
 
     @CacheEvict(allEntries = true, beforeInvocation = true)
     @Override
@@ -194,5 +199,22 @@ public class UserServiceImpl implements UserService {
         if (!isSuccess) {
             ExceptionCast.cast(CommonCode.UPDATE_FAIL);
         }
+    }
+
+    @CacheEvict(cacheNames = "system:user", allEntries = true, beforeInvocation = true)
+    @Override
+    public void updateAvatar(User bean, MultipartFile file) {
+        // 若头像不为空先删除
+        String avatarId = bean.getAvatarId();
+        if (StringUtils.isNotBlank(avatarId)) {
+            fileInfoService.delete(avatarId);
+        }
+        // 上传头像
+        FileInfo fileInfo = fileInfoService.insert(file, bean.getId());
+        // 更新用户头像
+        User record = new User();
+        record.setAvatarId(fileInfo.getId());
+        record.setId(bean.getId());
+        this.userManager.updateById(record);
     }
 }

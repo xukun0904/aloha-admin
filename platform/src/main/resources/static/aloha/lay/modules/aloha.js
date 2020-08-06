@@ -52,6 +52,9 @@ layui.extend({
     self.post = function (params) {
         view.request($.extend({type: 'post'}, params))
     };
+    self.ajax = function (params) {
+        view.request(params)
+    };
 
     //初始化视图区域
     self.initView = function (route) {

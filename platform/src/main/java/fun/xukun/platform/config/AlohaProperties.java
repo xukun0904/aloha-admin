@@ -38,6 +38,11 @@ public class AlohaProperties {
      */
     private CacheProperties cache;
 
+    /**
+     * 文件上传位置
+     */
+    private String filePath;
+
     public AlohaProperties() {
         captcha = new CaptchaProperties();
         security = new SecurityProperties();

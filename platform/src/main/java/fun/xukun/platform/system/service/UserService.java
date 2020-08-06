@@ -6,6 +6,7 @@ import fun.xukun.model.domain.system.User;
 import fun.xukun.model.domain.system.ext.UserExt;
 import fun.xukun.model.domain.system.request.UserQuery;
 import fun.xukun.platform.security.model.UserInfo;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 日期:2020/6/22
@@ -92,4 +93,12 @@ public interface UserService {
      * @param bean 实体类
      */
     void updateSettings(User bean);
+
+    /**
+     * 上传用户头像
+     *
+     * @param bean 实体类
+     * @param file 头像文件
+     */
+    void updateAvatar(User bean, MultipartFile file);
 }

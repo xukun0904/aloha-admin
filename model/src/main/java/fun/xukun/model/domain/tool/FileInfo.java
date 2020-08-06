@@ -1,15 +1,16 @@
 package fun.xukun.model.domain.tool;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.TableField;
-import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -17,7 +18,7 @@ import lombok.EqualsAndHashCode;
  * </p>
  *
  * @author xukun
- * @since 2020-08-03
+ * @since 2020-08-06
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -34,7 +35,7 @@ public class FileInfo implements Serializable {
     @TableField("real_name")
     private String realName;
 
-    @ApiModelProperty(value = "文件名")
+    @ApiModelProperty(value = "本地存储文件名")
     @TableField("name")
     private String name;
 
@@ -48,7 +49,7 @@ public class FileInfo implements Serializable {
 
     @ApiModelProperty(value = "大小")
     @TableField("size")
-    private Integer size;
+    private Long size;
 
     @ApiModelProperty(value = "类型")
     @TableField("type")
