@@ -209,12 +209,16 @@
             if (checkStatus) {
                 status = 1;
             }
-            aloha.modal.confirm('提示', '当您点击确定按钮后，将会锁定此用户！', function () {
+            aloha.modal.confirm('提示', '当您点击确定按钮后，将会更改此用户状态！', function () {
                 // 进度条
                 let loadIndex = layer.load(2);
                 aloha.patch(ctx + 'user', {id: data.value, status: status}, function () {
-                    aloha.alert.success('修改成功！');
-                    $reset.click();
+                    if (data.value === currentUser.id) {
+                        window.location.href = ctx + "logout";
+                    } else {
+                        aloha.alert.success('修改成功！');
+                        $reset.click();
+                    }
                 }, loadIndex);
             }, function () {
                 data.elem.checked = !checkStatus;

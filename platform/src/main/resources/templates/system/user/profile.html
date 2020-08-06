@@ -126,11 +126,11 @@
         initSettings();
 
         $view.on('click', '#update-user-info', function () {
-            aloha.modal.view('个人信息修改', 'user/update', {
+            aloha.modal.view('个人信息修改', '/user/update/' + currentUser.id, {
                 area: $(window).width() <= 750 ? '90%' : '50%',
                 btn: ['确定'],
                 yes: function () {
-                    $('#profile-update').find('#submit').trigger('click');
+                    $('#user-update').find('#submit').trigger('click');
                 }
             });
         });

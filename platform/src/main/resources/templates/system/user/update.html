@@ -165,8 +165,18 @@
                     if (result.data) {
                         aloha.put(ctx + 'user', data.field, function () {
                             layer.closeAll();
-                            aloha.alert.success('修改成功');
-                            $('#aloha-user').find('#query').click();
+                            if (data.field.id === currentUser.id) {
+                                if (data.field.status === '0') {
+                                    window.location.href = ctx + "logout";
+                                } else {
+                                    aloha.modal.confirm('修改当前用户成功', '是否马上刷新页面生效？', function () {
+                                        window.location.reload();
+                                    });
+                                }
+                            } else {
+                                aloha.alert.success('修改成功');
+                                $('#aloha-user').find('#query').click();
+                            }
                             return false;
                         });
                     }
