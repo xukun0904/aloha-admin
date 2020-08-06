@@ -185,10 +185,10 @@
 
         form.on("radio(theme)", function (data) {
             const $sidebar = $('#app-sidebar');
-            if (data.value === 'black') {
+            if (data.value === '0') {
                 $sidebar.removeClass('aloha-theme-white');
             }
-            if (data.value === 'white') {
+            if (data.value === '1') {
                 $sidebar.addClass('aloha-theme-white');
             }
         });
