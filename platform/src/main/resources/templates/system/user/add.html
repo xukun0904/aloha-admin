@@ -143,8 +143,9 @@
                             return false;
                         });
                     }
+                } else {
+                    aloha.alert.error('用户名已被使用');
                 }
-                aloha.alert.error('用户名已被使用');
             });
             return false;
         });
