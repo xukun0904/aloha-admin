@@ -28,7 +28,7 @@
         <java.version>1.8</java.version>
         <aloha-admin.version>1.0.0_Beta</aloha-admin.version>
         <mybatis-plus.version>3.3.2</mybatis-plus.version>
-        <mysql.version>8.0.20</mysql.version>
+        <mysql.version>8.0.28</mysql.version>
         <freemarker.version>2.3.30</freemarker.version>
         <lombok.version>1.18.12</lombok.version>
         <swagger2.version>2.9.2</swagger2.version>
