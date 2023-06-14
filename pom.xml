@@ -34,7 +34,7 @@
         <swagger2.version>2.9.2</swagger2.version>
         <swagger-models.version>1.6.1</swagger-models.version>
         <commons-lang3.version>3.10</commons-lang3.version>
-        <guava.version>29.0-jre</guava.version>
+        <guava.version>32.0.0-jre</guava.version>
         <easy-captcha.version>1.6.2</easy-captcha.version>
         <jjwt.version>0.9.1</jjwt.version>
     </properties>
